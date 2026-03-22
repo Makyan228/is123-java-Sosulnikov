@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Складская система</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="container">
+    <h1>Складская система</h1>
+    <p>Текущие товары на складе:</p>
+
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Наименование</th>
+            <th>Количество</th>
+            <th>Место хранения</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="product : ${products}">
+            <td th:text="${product.id}"></td>
+            <td th:text="${product.name}"></td>
+            <td th:text="${product.quantity}"></td>
+            <td th:text="${product.location}"></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>
