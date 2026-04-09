@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<header class="topbar" th:fragment="header(title, subtitle)">
+    <div class="topbar-left">
+        <h1 th:text="${title}">Заголовок</h1>
+        <p th:text="${subtitle}">Подзаголовок</p>
+    </div>
+
+    <div class="topbar-right">
+        <form th:action="@{/products}" method="get" class="global-search">
+            <input type="text" name="search" placeholder="Поиск по товарам или артикулу">
+            <button type="submit">Найти</button>
+        </form>
+
+        <div class="user-badge">Админ</div>
+    </div>
+</header>
+
+</body>
+</html>

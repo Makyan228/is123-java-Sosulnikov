@@ -1,18 +1,50 @@
 package com.skladsystem.service;
 
 import com.skladsystem.model.Product;
+import com.skladsystem.repository.ProductRepository;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
 public class ProductService {
 
-    public List<Product> getAllProducts() {
-        return List.of(
-                new Product(1L, "Ноутбук Lenovo", 12, "Стеллаж A-1"),
-                new Product(2L, "Мышь Logitech", 35, "Стеллаж B-2"),
-                new Product(3L, "Клавиатура Redragon", 20, "Стеллаж C-3")
-        );
+    private final ProductRepository productRepository;
+
+    public ProductService(ProductRepository productRepository) {
+        this.productRepository = productRepository;
+    }
+
+    public List<Product> findAll() {
+        return productRepository.findAll();
+    }
+
+    public List<Product> search(String search) {
+        return productRepository.search(search);
+    }
+
+    public void save(Product product) {
+        productRepository.save(product);
+    }
+
+    public long countProducts() {
+        return productRepository.countProducts();
+    }
+
+    public BigDecimal sumQuantity() {
+        return productRepository.sumQuantity();
+    }
+
+    public long countLowStock(int threshold) {
+        return productRepository.countLowStock(threshold);
+    }
+
+    public BigDecimal totalInventoryValue() {
+        return productRepository.totalInventoryValue();
+    }
+
+    public List<Product> findLatestFive() {
+        return productRepository.findLatestFive();
     }
 }

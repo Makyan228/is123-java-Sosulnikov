@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Sklad System | Товары</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<div class="app-layout">
+    <div th:replace="~{fragments/sidebar :: sidebar('products')}"></div>
+
+    <main class="main-content">
+        <div th:replace="~{fragments/header :: header('Товары', 'Список товаров, категории, единицы и остатки')}"></div>
+
+        <section class="content-card">
+            <div class="section-header">
+                <div>
+                    <h2>Список товаров</h2>
+                    <p>Данные из PRODUCT, PRODUCT_CATEGORY, MEASURE_UNIT и STOCK_BALANCE</p>
+                </div>
+
+                <div class="header-actions">
+                    <form th:action="@{/products}" method="get" class="page-search">
+                        <input type="text"
+                               name="search"
+                               th:value="${search}"
+                               placeholder="Поиск по названию, артикулу или штрихкоду">
+                        <button type="submit" class="btn btn-secondary">Искать</button>
+                    </form>
+
+                    <a th:href="@{/products/new}" class="btn btn-primary">Добавить товар</a>
+                </div>
+            </div>
+
+            <div class="table-wrapper" th:if="${!#lists.isEmpty(products)}">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Артикул</th>
+                        <th>Штрихкод</th>
+                        <th>Название</th>
+                        <th>Категория</th>
+                        <th>Ед.</th>
+                        <th>Цена</th>
+                        <th>Мин. остаток</th>
+                        <th>Текущий остаток</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="product : ${products}">
+                        <td th:text="${product.id}">1</td>
+                        <td th:text="${product.article}">ART-001</td>
+                        <td th:text="${product.barcode}">123456</td>
+                        <td th:text="${product.name}">Товар</td>
+                        <td th:text="${product.categoryName}">Категория</td>
+                        <td th:text="${product.unitName}">шт</td>
+                        <td th:text="${product.price}">100.00</td>
+                        <td th:text="${product.minStock}">5</td>
+                        <td th:text="${product.totalQuantity}">20</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="empty-state" th:if="${#lists.isEmpty(products)}">
+                <h3>Товаров пока нет</h3>
+                <p>Добавь первую позицию, и список начнет заполняться.</p>
+                <a th:href="@{/products/new}" class="btn btn-primary">Добавить товар</a>
+            </div>
+        </section>
+    </main>
+</div>
+
+</body>
+</html>

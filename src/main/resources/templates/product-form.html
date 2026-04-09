@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Sklad System | Добавление товара</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<div class="app-layout">
+    <div th:replace="~{fragments/sidebar :: sidebar('products')}"></div>
+
+    <main class="main-content">
+        <div th:replace="~{fragments/header :: header('Новый товар', 'Добавление записи в таблицу PRODUCT')}"></div>
+
+        <section class="content-card form-card">
+            <div class="section-header">
+                <div>
+                    <h2>Форма добавления товара</h2>
+                    <p>Заполни карточку товара и сохрани ее в базе</p>
+                </div>
+            </div>
+
+            <form th:action="@{/products}" th:object="${product}" method="post" class="product-form">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="article">Артикул</label>
+                        <input id="article" type="text" th:field="*{article}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="barcode">Штрихкод</label>
+                        <input id="barcode" type="text" th:field="*{barcode}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="name">Название товара</label>
+                        <input id="name" type="text" th:field="*{name}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="categoryId">Категория</label>
+                        <select id="categoryId" th:field="*{categoryId}" required>
+                            <option value="">Выбери категорию</option>
+                            <option th:each="category : ${categories}"
+                                    th:value="${category.id}"
+                                    th:text="${category.name}">
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="unitId">Единица измерения</label>
+                        <select id="unitId" th:field="*{unitId}" required>
+                            <option value="">Выбери единицу</option>
+                            <option th:each="unit : ${units}"
+                                    th:value="${unit.id}"
+                                    th:text="${unit.shortName != null and !#strings.isEmpty(unit.shortName) ? unit.shortName + ' — ' + unit.name : unit.name}">
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="price">Цена</label>
+                        <input id="price" type="number" th:field="*{price}" min="0" step="0.01" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="minStock">Минимальный остаток</label>
+                        <input id="minStock" type="number" th:field="*{minStock}" min="0" step="0.001" required>
+                    </div>
+
+                    <div class="form-group form-group-full">
+                        <label for="notes">Примечание</label>
+                        <textarea id="notes" th:field="*{notes}" placeholder="Комментарий по товару"></textarea>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <a th:href="@{/products}" class="btn btn-light">Отмена</a>
+                    <button type="submit" class="btn btn-primary">Сохранить товар</button>
+                </div>
+            </form>
+        </section>
+    </main>
+</div>
+
+</body>
+</html>

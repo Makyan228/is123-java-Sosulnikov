@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<aside class="sidebar" th:fragment="sidebar(activePage)">
+    <div class="sidebar-brand">
+        <div class="brand-logo">SK</div>
+        <div>
+            <div class="brand-title">Sklad System</div>
+            <div class="brand-subtitle">Учет склада</div>
+        </div>
+    </div>
+
+    <nav class="sidebar-nav">
+        <a th:href="@{/}"
+           class="nav-link"
+           th:classappend="${activePage == 'dashboard'} ? ' active' : ''">
+            Главная
+        </a>
+
+        <a th:href="@{/products}"
+           class="nav-link"
+           th:classappend="${activePage == 'products'} ? ' active' : ''">
+            Товары
+        </a>
+
+        <a href="#" class="nav-link disabled">Поставщики</a>
+        <a href="#" class="nav-link disabled">Поступления</a>
+        <a href="#" class="nav-link disabled">Отгрузки</a>
+        <a href="#" class="nav-link disabled">Остатки</a>
+    </nav>
+</aside>
+
+</body>
+</html>

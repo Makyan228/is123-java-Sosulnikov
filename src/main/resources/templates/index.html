@@ -2,32 +2,78 @@
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Складская система</title>
+    <title>Sklad System | Главная</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
-<div class="container">
-    <h1>Складская система</h1>
-    <p>Текущие товары на складе:</p>
 
-    <table>
-        <thead>
-        <tr>
-            <th>ID</th>
-            <th>Наименование</th>
-            <th>Количество</th>
-            <th>Место хранения</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="product : ${products}">
-            <td th:text="${product.id}"></td>
-            <td th:text="${product.name}"></td>
-            <td th:text="${product.quantity}"></td>
-            <td th:text="${product.location}"></td>
-        </tr>
-        </tbody>
-    </table>
+<div class="app-layout">
+    <div th:replace="~{fragments/sidebar :: sidebar('dashboard')}"></div>
+
+    <main class="main-content">
+        <div th:replace="~{fragments/header :: header('Главная панель', 'Краткая сводка по складу')}"></div>
+
+        <section class="cards-grid">
+            <div class="stat-card">
+                <div class="stat-label">Активных товаров</div>
+                <div class="stat-value" th:text="${productsCount}">0</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Общий остаток</div>
+                <div class="stat-value" th:text="${totalQuantity}">0</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Ниже минимума</div>
+                <div class="stat-value" th:text="${lowStockCount}">0</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Стоимость остатков</div>
+                <div class="stat-value" th:text="${totalInventoryValue}">0</div>
+            </div>
+        </section>
+
+        <section class="content-card">
+            <div class="section-header">
+                <div>
+                    <h2>Последние товары</h2>
+                    <p>Последние 5 записей из таблицы PRODUCT</p>
+                </div>
+
+                <a th:href="@{/products}" class="btn btn-secondary">Открыть все</a>
+            </div>
+
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Артикул</th>
+                        <th>Название</th>
+                        <th>Категория</th>
+                        <th>Ед.</th>
+                        <th>Цена</th>
+                        <th>Остаток</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="product : ${latestProducts}">
+                        <td th:text="${product.id}">1</td>
+                        <td th:text="${product.article}">ART-001</td>
+                        <td th:text="${product.name}">Товар</td>
+                        <td th:text="${product.categoryName}">Категория</td>
+                        <td th:text="${product.unitName}">шт</td>
+                        <td th:text="${product.price}">100.00</td>
+                        <td th:text="${product.totalQuantity}">0</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
 </div>
+
 </body>
 </html>
