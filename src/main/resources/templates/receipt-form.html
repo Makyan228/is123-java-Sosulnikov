@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Sklad System | Поступление</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<div class="app-layout">
+    <div th:replace="~{fragments/sidebar :: sidebar('receipts')}"></div>
+
+    <main class="main-content">
+        <div th:replace="~{fragments/header :: header(${pageTitle}, ${pageSubtitle})}"></div>
+
+        <section class="content-card form-card">
+            <div class="section-header">
+                <div>
+                    <h2 th:text="${pageTitle}">Форма поступления</h2>
+                    <p th:text="${pageSubtitle}">Работа с документом поступления</p>
+                </div>
+            </div>
+
+            <form th:object="${receipt}"
+                  method="post"
+                  class="product-form"
+                  th:attr="action=${receipt.id == null} ? '/receipts' : '/receipts/' + ${receipt.id}">
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="docNumber">Номер документа</label>
+                        <input id="docNumber" type="text" th:field="*{docNumber}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="docStatus">Статус</label>
+                        <select id="docStatus" th:field="*{docStatus}" required>
+                            <option value="DRAFT">DRAFT</option>
+                            <option value="POSTED">POSTED</option>
+                            <option value="CANCELLED">CANCELLED</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="docDate">Дата документа</label>
+                        <input id="docDate" type="date" th:field="*{docDate}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="warehouseId">Склад</label>
+                        <select id="warehouseId" th:field="*{warehouseId}" required>
+                            <option value="">Выбери склад</option>
+                            <option th:each="warehouse : ${warehouses}"
+                                    th:value="${warehouse.id}"
+                                    th:text="${warehouse.name}">
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="counterpartyId">Поставщик</label>
+                        <select id="counterpartyId" th:field="*{counterpartyId}">
+                            <option value="">Выбери поставщика</option>
+                            <option th:each="supplier : ${suppliers}"
+                                    th:value="${supplier.id}"
+                                    th:text="${supplier.name}">
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="form-group form-group-full">
+                        <label for="notes">Примечание</label>
+                        <textarea id="notes" th:field="*{notes}" placeholder="Комментарий к документу"></textarea>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <a th:href="@{/receipts}" class="btn btn-light">Отмена</a>
+                    <button type="submit" class="btn btn-primary" th:text="${submitButtonText}">Сохранить</button>
+                </div>
+            </form>
+        </section>
+    </main>
+</div>
+
+</body>
+</html>

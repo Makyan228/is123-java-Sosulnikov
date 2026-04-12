@@ -24,8 +24,16 @@
             Товары
         </a>
 
-        <a href="#" class="nav-link disabled">Поставщики</a>
-        <a href="#" class="nav-link disabled">Поступления</a>
+        <a th:href="@{/suppliers}"
+           class="nav-link"
+           th:classappend="${activePage == 'suppliers'} ? ' active' : ''">
+            Поставщики
+        </a>
+        <a th:href="@{/receipts}"
+           class="nav-link"
+           th:classappend="${activePage == 'receipts'} ? ' active' : ''">
+            Поступления
+        </a>
         <a href="#" class="nav-link disabled">Отгрузки</a>
         <a href="#" class="nav-link disabled">Остатки</a>
     </nav>

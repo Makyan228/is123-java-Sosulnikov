@@ -25,10 +25,12 @@ public class ProductRepository {
         product.setBarcode(rs.getString("barcode"));
         product.setName(rs.getString("name"));
 
-        product.setCategoryId(rs.getLong("category_id"));
+        long categoryId = rs.getLong("category_id");
+        product.setCategoryId(rs.wasNull() ? null : categoryId);
         product.setCategoryName(rs.getString("category_name"));
 
-        product.setUnitId(rs.getLong("unit_id"));
+        long unitId = rs.getLong("unit_id");
+        product.setUnitId(rs.wasNull() ? null : unitId);
         product.setUnitName(rs.getString("unit_name"));
 
         product.setPrice(rs.getBigDecimal("price"));
@@ -87,9 +89,8 @@ public class ProductRepository {
 
     public List<Product> findAll() {
         String sql = baseSelect() + """
-                
+                where coalesce(p.is_active, 0) = 1
                 """ + groupByPart() + """
-                
                 order by p.name
                 """;
 
@@ -102,17 +103,28 @@ public class ProductRepository {
         }
 
         String sql = baseSelect() + """
-                where
+                where coalesce(p.is_active, 0) = 1
+                  and (
                     p.name containing ?
                     or coalesce(p.article, '') containing ?
                     or coalesce(p.barcode, '') containing ?
+                  )
                 """ + groupByPart() + """
-                
                 order by p.name
                 """;
 
         String term = search.trim();
         return jdbcTemplate.query(sql, productRowMapper, term, term, term);
+    }
+
+    public Product findById(Long id) {
+        String sql = baseSelect() + """
+                where coalesce(p.is_active, 0) = 1
+                  and p.id = ?
+                """ + groupByPart();
+
+        List<Product> products = jdbcTemplate.query(sql, productRowMapper, id);
+        return products.isEmpty() ? null : products.get(0);
     }
 
     public void save(Product product) {
@@ -148,6 +160,47 @@ public class ProductRepository {
         );
     }
 
+    public void update(Product product) {
+        String sql = """
+                update product
+                set
+                    article = ?,
+                    barcode = ?,
+                    name = ?,
+                    category_id = ?,
+                    unit_id = ?,
+                    price = ?,
+                    min_stock = ?,
+                    is_active = ?,
+                    notes = ?
+                where id = ?
+                """;
+
+        boolean active = product.getActive() == null || product.getActive();
+
+        jdbcTemplate.update(
+                sql,
+                nullIfBlank(product.getArticle()),
+                nullIfBlank(product.getBarcode()),
+                nullIfBlank(product.getName()),
+                product.getCategoryId(),
+                product.getUnitId(),
+                product.getPrice(),
+                product.getMinStock(),
+                active ? 1 : 0,
+                nullIfBlank(product.getNotes()),
+                product.getId()
+        );
+    }
+
+    public void softDelete(Long id) {
+        jdbcTemplate.update("""
+                update product
+                set is_active = 0
+                where id = ?
+                """, id);
+    }
+
     public long countProducts() {
         Long result = jdbcTemplate.queryForObject("""
                 select count(*)
@@ -160,8 +213,10 @@ public class ProductRepository {
 
     public BigDecimal sumQuantity() {
         BigDecimal result = jdbcTemplate.queryForObject("""
-                select coalesce(sum(quantity), 0)
-                from stock_balance
+                select coalesce(sum(sb.quantity), 0)
+                from stock_balance sb
+                join product p on p.id = sb.product_id
+                where coalesce(p.is_active, 0) = 1
                 """, BigDecimal.class);
 
         return result != null ? result : BigDecimal.ZERO;
@@ -198,44 +253,12 @@ public class ProductRepository {
     }
 
     public List<Product> findLatestFive() {
-        String sql = """
-            select
-                p.id,
-                p.article,
-                p.barcode,
-                p.name,
-                p.category_id,
-                pc.name as category_name,
-                p.unit_id,
-                coalesce(mu.short_name, mu.name) as unit_name,
-                p.price,
-                p.min_stock,
-                coalesce(sum(sb.quantity), 0) as total_quantity,
-                p.is_active,
-                p.notes,
-                p.created_at as created_at
-            from product p
-            left join product_category pc on pc.id = p.category_id
-            left join measure_unit mu on mu.id = p.unit_id
-            left join stock_balance sb on sb.product_id = p.id
-            group by
-                p.id,
-                p.article,
-                p.barcode,
-                p.name,
-                p.category_id,
-                pc.name,
-                p.unit_id,
-                mu.short_name,
-                mu.name,
-                p.price,
-                p.min_stock,
-                p.is_active,
-                p.notes,
-                p.created_at
-            order by p.created_at desc, p.id desc
-            rows 5
-            """;
+        String sql = baseSelect() + """
+                where coalesce(p.is_active, 0) = 1
+                """ + groupByPart() + """
+                order by p.id desc
+                rows 5
+                """;
 
         return jdbcTemplate.query(sql, productRowMapper);
     }

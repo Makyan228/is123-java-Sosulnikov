@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Sklad System | Поставщик</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<div class="app-layout">
+    <div th:replace="~{fragments/sidebar :: sidebar('suppliers')}"></div>
+
+    <main class="main-content">
+        <div th:replace="~{fragments/header :: header(${pageTitle}, ${pageSubtitle})}"></div>
+
+        <section class="content-card form-card">
+            <div class="section-header">
+                <div>
+                    <h2 th:text="${pageTitle}">Форма поставщика</h2>
+                    <p th:text="${pageSubtitle}">Работа с поставщиком</p>
+                </div>
+            </div>
+
+            <form th:object="${supplier}"
+                  method="post"
+                  class="product-form"
+                  th:attr="action=${supplier.id == null} ? '/suppliers' : '/suppliers/' + ${supplier.id}">
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="name">Название поставщика</label>
+                        <input id="name" type="text" th:field="*{name}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone">Телефон</label>
+                        <input id="phone" type="text" th:field="*{phone}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input id="email" type="email" th:field="*{email}">
+                    </div>
+
+                    <div class="form-group form-group-full">
+                        <label for="address">Адрес</label>
+                        <textarea id="address" th:field="*{address}" placeholder="Адрес поставщика"></textarea>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <a th:href="@{/suppliers}" class="btn btn-light">Отмена</a>
+                    <button type="submit" class="btn btn-primary" th:text="${submitButtonText}">Сохранить</button>
+                </div>
+            </form>
+        </section>
+    </main>
+</div>
+
+</body>
+</html>

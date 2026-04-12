@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Sklad System | Поступления</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<div class="app-layout">
+    <div th:replace="~{fragments/sidebar :: sidebar('receipts')}"></div>
+
+    <main class="main-content">
+        <div th:replace="~{fragments/header :: header('Поступления', 'Шапки документов поступления из STOCK_DOCUMENT')}"></div>
+
+        <section class="content-card">
+            <div class="section-header">
+                <div>
+                    <h2>Список поступлений</h2>
+                    <p>Показываются документы с DOC_TYPE = RECEIPT</p>
+                </div>
+
+                <a th:href="@{/receipts/new}" class="btn btn-primary">Создать поступление</a>
+            </div>
+
+            <div class="table-wrapper" th:if="${!#lists.isEmpty(receipts)}">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Номер</th>
+                        <th>Статус</th>
+                        <th>Дата</th>
+                        <th>Склад</th>
+                        <th>Поставщик</th>
+                        <th>Примечание</th>
+                        <th>Действия</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="receipt : ${receipts}">
+                        <td th:text="${receipt.id}">1</td>
+                        <td th:text="${receipt.docNumber}">REC-001</td>
+                        <td th:text="${receipt.docStatus}">DRAFT</td>
+                        <td th:text="${receipt.docDate}">2026-04-13</td>
+                        <td th:text="${receipt.warehouseName}">Склад</td>
+                        <td th:text="${receipt.counterpartyName}">Поставщик</td>
+                        <td th:text="${receipt.notes}">Примечание</td>
+                        <td>
+                            <div class="table-actions">
+                                <a th:href="@{/receipts/{id}/edit(id=${receipt.id})}" class="btn btn-secondary btn-small">
+                                    Редактировать
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="empty-state" th:if="${#lists.isEmpty(receipts)}">
+                <h3>Поступлений пока нет</h3>
+                <p>Создай первый документ поступления.</p>
+                <a th:href="@{/receipts/new}" class="btn btn-primary">Создать поступление</a>
+            </div>
+        </section>
+    </main>
+</div>
+
+</body>
+</html>

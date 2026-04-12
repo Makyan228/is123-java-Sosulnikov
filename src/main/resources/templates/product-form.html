@@ -2,7 +2,7 @@
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Sklad System | Добавление товара</title>
+    <title>Sklad System | Товар</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
@@ -11,17 +11,21 @@
     <div th:replace="~{fragments/sidebar :: sidebar('products')}"></div>
 
     <main class="main-content">
-        <div th:replace="~{fragments/header :: header('Новый товар', 'Добавление записи в таблицу PRODUCT')}"></div>
+        <div th:replace="~{fragments/header :: header(${pageTitle}, ${pageSubtitle})}"></div>
 
         <section class="content-card form-card">
             <div class="section-header">
                 <div>
-                    <h2>Форма добавления товара</h2>
-                    <p>Заполни карточку товара и сохрани ее в базе</p>
+                    <h2 th:text="${pageTitle}">Форма товара</h2>
+                    <p th:text="${pageSubtitle}">Работа с записью товара</p>
                 </div>
             </div>
 
-            <form th:action="@{/products}" th:object="${product}" method="post" class="product-form">
+            <form th:object="${product}"
+                  method="post"
+                  class="product-form"
+                  th:attr="action=${product.id == null} ? '/products' : '/products/' + ${product.id}">
+
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="article">Артикул</label>
@@ -78,7 +82,7 @@
 
                 <div class="form-actions">
                     <a th:href="@{/products}" class="btn btn-light">Отмена</a>
-                    <button type="submit" class="btn btn-primary">Сохранить товар</button>
+                    <button type="submit" class="btn btn-primary" th:text="${submitButtonText}">Сохранить</button>
                 </div>
             </form>
         </section>
