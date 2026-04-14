@@ -32,4 +32,17 @@ public class MeasureUnit {
     public void setShortName(String shortName) {
         this.shortName = shortName;
     }
+
+    public String getDisplayLabelRu() {
+        if (shortName == null || shortName.isBlank()) {
+            return name;
+        }
+
+        return switch (shortName.toLowerCase()) {
+            case "pcs" -> "шт — Штука";
+            case "kg" -> "кг — Килограмм";
+            case "l" -> "л — Литр";
+            default -> shortName + " — " + name;
+        };
+    }
 }

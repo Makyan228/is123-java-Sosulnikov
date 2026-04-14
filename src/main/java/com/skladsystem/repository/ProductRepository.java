@@ -45,6 +45,25 @@ public class ProductRepository {
         return product;
     };
 
+    private String quantitySubquery() {
+        return """
+                left join (
+                    select
+                        sdi.product_id,
+                        coalesce(sum(
+                            case
+                                when sd.doc_type = 'IN' and coalesce(sd.doc_status, '') <> 'CANCELLED' then sdi.quantity
+                                when sd.doc_type = 'OUT' and coalesce(sd.doc_status, '') <> 'CANCELLED' then -sdi.quantity
+                                else 0
+                            end
+                        ), 0) as total_quantity
+                    from stock_document_item sdi
+                    join stock_document sd on sd.id = sdi.document_id
+                    group by sdi.product_id
+                ) q on q.product_id = p.id
+                """;
+    }
+
     private String baseSelect() {
         return """
                 select
@@ -58,39 +77,18 @@ public class ProductRepository {
                     coalesce(mu.short_name, mu.name) as unit_name,
                     p.price,
                     p.min_stock,
-                    coalesce(sum(sb.quantity), 0) as total_quantity,
+                    coalesce(q.total_quantity, 0) as total_quantity,
                     p.is_active,
                     p.notes
                 from product p
                 left join product_category pc on pc.id = p.category_id
                 left join measure_unit mu on mu.id = p.unit_id
-                left join stock_balance sb on sb.product_id = p.id
-                """;
-    }
-
-    private String groupByPart() {
-        return """
-                group by
-                    p.id,
-                    p.article,
-                    p.barcode,
-                    p.name,
-                    p.category_id,
-                    pc.name,
-                    p.unit_id,
-                    mu.short_name,
-                    mu.name,
-                    p.price,
-                    p.min_stock,
-                    p.is_active,
-                    p.notes
-                """;
+                """ + quantitySubquery();
     }
 
     public List<Product> findAll() {
         String sql = baseSelect() + """
                 where coalesce(p.is_active, 0) = 1
-                """ + groupByPart() + """
                 order by p.name
                 """;
 
@@ -109,7 +107,6 @@ public class ProductRepository {
                     or coalesce(p.article, '') containing ?
                     or coalesce(p.barcode, '') containing ?
                   )
-                """ + groupByPart() + """
                 order by p.name
                 """;
 
@@ -121,7 +118,7 @@ public class ProductRepository {
         String sql = baseSelect() + """
                 where coalesce(p.is_active, 0) = 1
                   and p.id = ?
-                """ + groupByPart();
+                """;
 
         List<Product> products = jdbcTemplate.query(sql, productRowMapper, id);
         return products.isEmpty() ? null : products.get(0);
@@ -213,9 +210,16 @@ public class ProductRepository {
 
     public BigDecimal sumQuantity() {
         BigDecimal result = jdbcTemplate.queryForObject("""
-                select coalesce(sum(sb.quantity), 0)
-                from stock_balance sb
-                join product p on p.id = sb.product_id
+                select coalesce(sum(
+                    case
+                        when sd.doc_type = 'IN' and coalesce(sd.doc_status, '') <> 'CANCELLED' then sdi.quantity
+                        when sd.doc_type = 'OUT' and coalesce(sd.doc_status, '') <> 'CANCELLED' then -sdi.quantity
+                        else 0
+                    end
+                ), 0)
+                from stock_document_item sdi
+                join stock_document sd on sd.id = sdi.document_id
+                join product p on p.id = sdi.product_id
                 where coalesce(p.is_active, 0) = 1
                 """, BigDecimal.class);
 
@@ -225,17 +229,23 @@ public class ProductRepository {
     public long countLowStock(int ignoredThreshold) {
         Long result = jdbcTemplate.queryForObject("""
                 select count(*)
-                from (
+                from product p
+                left join (
                     select
-                        p.id,
-                        coalesce(sum(sb.quantity), 0) as total_quantity,
-                        coalesce(p.min_stock, 0) as min_stock
-                    from product p
-                    left join stock_balance sb on sb.product_id = p.id
-                    where coalesce(p.is_active, 0) = 1
-                    group by p.id, p.min_stock
-                ) t
-                where t.total_quantity <= t.min_stock
+                        sdi.product_id,
+                        coalesce(sum(
+                            case
+                                when sd.doc_type = 'IN' and coalesce(sd.doc_status, '') <> 'CANCELLED' then sdi.quantity
+                                when sd.doc_type = 'OUT' and coalesce(sd.doc_status, '') <> 'CANCELLED' then -sdi.quantity
+                                else 0
+                            end
+                        ), 0) as total_quantity
+                    from stock_document_item sdi
+                    join stock_document sd on sd.id = sdi.document_id
+                    group by sdi.product_id
+                ) q on q.product_id = p.id
+                where coalesce(p.is_active, 0) = 1
+                  and coalesce(q.total_quantity, 0) <= coalesce(p.min_stock, 0)
                 """, Long.class);
 
         return result != null ? result : 0L;
@@ -243,9 +253,22 @@ public class ProductRepository {
 
     public BigDecimal totalInventoryValue() {
         BigDecimal result = jdbcTemplate.queryForObject("""
-                select coalesce(sum(sb.quantity * p.price), 0)
-                from stock_balance sb
-                join product p on p.id = sb.product_id
+                select coalesce(sum(coalesce(q.total_quantity, 0) * p.price), 0)
+                from product p
+                left join (
+                    select
+                        sdi.product_id,
+                        coalesce(sum(
+                            case
+                                when sd.doc_type = 'IN' and coalesce(sd.doc_status, '') <> 'CANCELLED' then sdi.quantity
+                                when sd.doc_type = 'OUT' and coalesce(sd.doc_status, '') <> 'CANCELLED' then -sdi.quantity
+                                else 0
+                            end
+                        ), 0) as total_quantity
+                    from stock_document_item sdi
+                    join stock_document sd on sd.id = sdi.document_id
+                    group by sdi.product_id
+                ) q on q.product_id = p.id
                 where coalesce(p.is_active, 0) = 1
                 """, BigDecimal.class);
 
@@ -255,7 +278,6 @@ public class ProductRepository {
     public List<Product> findLatestFive() {
         String sql = baseSelect() + """
                 where coalesce(p.is_active, 0) = 1
-                """ + groupByPart() + """
                 order by p.id desc
                 rows 5
                 """;

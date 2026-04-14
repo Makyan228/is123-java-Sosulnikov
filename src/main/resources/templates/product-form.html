@@ -59,7 +59,7 @@
                             <option value="">Выбери единицу</option>
                             <option th:each="unit : ${units}"
                                     th:value="${unit.id}"
-                                    th:text="${unit.shortName != null and !#strings.isEmpty(unit.shortName) ? unit.shortName + ' — ' + unit.name : unit.name}">
+                                    th:text="${unit.displayLabelRu}">
                             </option>
                         </select>
                     </div>

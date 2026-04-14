@@ -18,24 +18,33 @@
             Главная
         </a>
 
-        <a th:href="@{/products}"
+        <a th:if="${canViewProducts}"
+           th:href="@{/products}"
            class="nav-link"
            th:classappend="${activePage == 'products'} ? ' active' : ''">
             Товары
         </a>
 
-        <a th:href="@{/suppliers}"
-           class="nav-link"
-           th:classappend="${activePage == 'suppliers'} ? ' active' : ''">
-            Поставщики
-        </a>
-        <a th:href="@{/receipts}"
+        <a th:if="${canAccessReceipts}"
+           th:href="@{/receipts}"
            class="nav-link"
            th:classappend="${activePage == 'receipts'} ? ' active' : ''">
             Поступления
         </a>
-        <a href="#" class="nav-link disabled">Отгрузки</a>
-        <a href="#" class="nav-link disabled">Остатки</a>
+
+        <a th:if="${canAccessShipments}"
+           th:href="@{/shipments}"
+           class="nav-link"
+           th:classappend="${activePage == 'shipments'} ? ' active' : ''">
+            Отгрузки
+        </a>
+
+        <a th:if="${canAccessInventory}"
+           th:href="@{/inventory}"
+           class="nav-link"
+           th:classappend="${activePage == 'inventory'} ? ' active' : ''">
+            Остатки
+        </a>
     </nav>
 </aside>
 

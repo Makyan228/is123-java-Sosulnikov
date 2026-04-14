@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Sklad System | Остатки</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<div class="app-layout">
+    <div th:replace="~{fragments/sidebar :: sidebar('inventory')}"></div>
+
+    <main class="main-content">
+        <div th:replace="~{fragments/header :: header('Остатки', 'Текущее количество товаров на складе')}"></div>
+
+        <section class="content-card">
+            <div class="section-header">
+                <div>
+                    <h2>Остатки по товарам</h2>
+                    <p>Считаются как поступления минус отгрузки</p>
+                </div>
+            </div>
+
+            <div class="table-wrapper" th:if="${!#lists.isEmpty(products)}">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Артикул</th>
+                        <th>Название</th>
+                        <th>Ед.</th>
+                        <th>Цена</th>
+                        <th>Мин. остаток</th>
+                        <th>Текущий остаток</th>
+                        <th>Состояние</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="product : ${products}">
+                        <td th:text="${product.id}">1</td>
+                        <td th:text="${product.article}">ART-001</td>
+                        <td th:text="${product.name}">Товар</td>
+                        <td th:text="${product.unitName == 'pcs' ? 'шт' : (product.unitName == 'kg' ? 'кг' : (product.unitName == 'l' ? 'л' : product.unitName))}">шт</td>
+                        <td th:text="${product.price}">100.00</td>
+                        <td th:text="${product.minStock}">5</td>
+                        <td th:text="${product.totalQuantity}">20</td>
+                        <td th:text="${product.totalQuantity <= product.minStock ? 'Низкий остаток' : 'Норма'}">Норма</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="empty-state" th:if="${#lists.isEmpty(products)}">
+                <h3>Товаров пока нет</h3>
+                <p>Добавь товары и документы, чтобы появились остатки.</p>
+            </div>
+        </section>
+    </main>
+</div>
+
+</body>
+</html>

@@ -17,7 +17,7 @@
             <div class="section-header">
                 <div>
                     <h2>Список товаров</h2>
-                    <p>Данные из PRODUCT, PRODUCT_CATEGORY, MEASURE_UNIT и STOCK_BALANCE</p>
+                    <p>Данные из PRODUCT, PRODUCT_CATEGORY, MEASURE_UNIT и документов склада</p>
                 </div>
 
                 <div class="header-actions">
@@ -29,7 +29,7 @@
                         <button type="submit" class="btn btn-secondary">Искать</button>
                     </form>
 
-                    <a th:href="@{/products/new}" class="btn btn-primary">Добавить товар</a>
+                    <a th:if="${canManageProducts}" th:href="@{/products/new}" class="btn btn-primary">Добавить товар</a>
                 </div>
             </div>
 
@@ -46,7 +46,7 @@
                         <th>Цена</th>
                         <th>Мин. остаток</th>
                         <th>Текущий остаток</th>
-                        <th>Действия</th>
+                        <th th:if="${canManageProducts}">Действия</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -56,11 +56,11 @@
                         <td th:text="${product.barcode}">123456</td>
                         <td th:text="${product.name}">Товар</td>
                         <td th:text="${product.categoryName}">Категория</td>
-                        <td th:text="${product.unitName}">шт</td>
+                        <td th:text="${product.unitName == 'pcs' ? 'шт' : (product.unitName == 'kg' ? 'кг' : (product.unitName == 'l' ? 'л' : product.unitName))}">шт</td>
                         <td th:text="${product.price}">100.00</td>
                         <td th:text="${product.minStock}">5</td>
                         <td th:text="${product.totalQuantity}">20</td>
-                        <td>
+                        <td th:if="${canManageProducts}">
                             <div class="table-actions">
                                 <a th:href="@{/products/{id}/edit(id=${product.id})}" class="btn btn-secondary btn-small">
                                     Редактировать
@@ -81,7 +81,7 @@
             <div class="empty-state" th:if="${#lists.isEmpty(products)}">
                 <h3>Товаров пока нет</h3>
                 <p>Добавь первую позицию, и список начнет заполняться.</p>
-                <a th:href="@{/products/new}" class="btn btn-primary">Добавить товар</a>
+                <a th:if="${canManageProducts}" th:href="@{/products/new}" class="btn btn-primary">Добавить товар</a>
             </div>
         </section>
     </main>

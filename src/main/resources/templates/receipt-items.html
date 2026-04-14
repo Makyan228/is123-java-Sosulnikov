@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Sklad System | Позиции поступления</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<div class="app-layout">
+    <div th:replace="~{fragments/sidebar :: sidebar('receipts')}"></div>
+
+    <main class="main-content">
+        <div th:replace="~{fragments/header :: header('Позиции поступления', 'Товары внутри документа поступления')}"></div>
+
+        <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
+        <div class="alert alert-error" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+
+        <section class="content-card">
+            <div class="section-header">
+                <div>
+                    <h2>Документ <span th:text="${receipt.docNumber}">DOC-001</span></h2>
+                    <p>Добавление товаров в документ поступления</p>
+                </div>
+
+                <div class="header-actions">
+                    <a th:href="@{/receipts}" class="btn btn-light">К списку</a>
+                    <a th:href="@{/receipts/{id}/edit(id=${receipt.id})}" class="btn btn-secondary">Редактировать шапку</a>
+                </div>
+            </div>
+
+            <div class="receipt-info-grid">
+                <div class="receipt-info-box">
+                    <div class="receipt-info-label">Дата</div>
+                    <div class="receipt-info-value" th:text="${receipt.docDate}">2026-04-13</div>
+                </div>
+
+                <div class="receipt-info-box">
+                    <div class="receipt-info-label">Склад</div>
+                    <div class="receipt-info-value" th:text="${receipt.warehouseName}">Main warehouse</div>
+                </div>
+
+                <div class="receipt-info-box">
+                    <div class="receipt-info-label">Поставщик</div>
+                    <div class="receipt-info-value" th:text="${receipt.partnerName}">Поставщик</div>
+                </div>
+
+                <div class="receipt-info-box">
+                    <div class="receipt-info-label">Техническая локация</div>
+                    <div class="receipt-info-value"
+                         th:text="${defaultLocation != null ? defaultLocation.code + ' — ' + defaultLocation.name : 'Не задана'}">
+                        A-01 — Основная зона
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="content-card form-card">
+            <div class="section-header">
+                <div>
+                    <h2>Добавить позицию</h2>
+                    <p>Цена подставляется из карточки товара автоматически</p>
+                </div>
+            </div>
+
+            <form th:action="@{/receipts/{id}/items(id=${receipt.id})}"
+                  th:object="${newItem}"
+                  method="post"
+                  class="product-form">
+
+                <div class="form-grid">
+                    <div class="form-group form-group-full">
+                        <label for="productId">Товар</label>
+                        <select id="productId" th:field="*{productId}" required>
+                            <option value="">Выбери товар</option>
+                            <option th:each="product : ${products}"
+                                    th:value="${product.id}"
+                                    th:data-price="${product.price}"
+                                    th:text="${product.article + ' — ' + product.name}">
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="quantity">Количество</label>
+                        <input id="quantity" type="number" th:field="*{quantity}" min="0.001" step="0.001" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="price">Цена</label>
+                        <input id="price" type="number" th:field="*{price}" min="0" step="0.01" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Сумма позиции</label>
+                        <input id="lineTotalPreview" type="text" value="0.00" readonly>
+                    </div>
+
+                    <div class="form-group form-group-full">
+                        <label for="notes">Примечание</label>
+                        <textarea id="notes" th:field="*{notes}" placeholder="Комментарий к позиции"></textarea>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Добавить позицию</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="content-card">
+            <div class="section-header">
+                <div>
+                    <h2>Состав документа</h2>
+                    <p>Позиции из таблицы STOCK_DOCUMENT_ITEM</p>
+                </div>
+            </div>
+
+            <div class="table-wrapper" th:if="${!#lists.isEmpty(items)}">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Артикул</th>
+                        <th>Товар</th>
+                        <th>Локация</th>
+                        <th>Количество</th>
+                        <th>Цена</th>
+                        <th>Сумма</th>
+                        <th>Примечание</th>
+                        <th>Действия</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="item : ${items}">
+                        <td th:text="${item.id}">1</td>
+                        <td th:text="${item.productArticle}">ART-001</td>
+                        <td th:text="${item.productName}">Товар</td>
+                        <td th:text="${item.targetLocationName}">A-01 — Основная зона</td>
+                        <td th:text="${item.quantity}">10</td>
+                        <td th:text="${item.price}">1500.00</td>
+                        <td th:text="${item.lineTotal}">15000.00</td>
+                        <td th:text="${item.notes}">Комментарий</td>
+                        <td>
+                            <div class="table-actions">
+                                <form th:action="@{/receipts/{receiptId}/items/{itemId}/delete(receiptId=${receipt.id}, itemId=${item.id})}"
+                                      method="post"
+                                      onsubmit="return confirm('Удалить позицию из документа?');">
+                                    <button type="submit" class="btn btn-danger btn-small">Удалить</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                    <tfoot>
+                    <tr>
+                        <th colspan="6" style="text-align: right;">Итог по документу:</th>
+                        <th th:text="${documentTotal}">0.00</th>
+                        <th colspan="2"></th>
+                    </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <div class="empty-state" th:if="${#lists.isEmpty(items)}">
+                <h3>Позиции пока не добавлены</h3>
+                <p>Добавь товары в документ через форму выше.</p>
+            </div>
+        </section>
+    </main>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const productSelect = document.getElementById('productId');
+        const quantityInput = document.getElementById('quantity');
+        const priceInput = document.getElementById('price');
+        const lineTotalPreview = document.getElementById('lineTotalPreview');
+
+        function updatePriceFromProduct() {
+            const selectedOption = productSelect.options[productSelect.selectedIndex];
+            const productPrice = selectedOption ? selectedOption.getAttribute('data-price') : null;
+
+            if (productPrice && !priceInput.value) {
+                priceInput.value = productPrice;
+            }
+            updateLineTotal();
+        }
+
+        function updateLineTotal() {
+            const quantity = parseFloat(quantityInput.value) || 0;
+            const price = parseFloat(priceInput.value) || 0;
+            const total = quantity * price;
+            lineTotalPreview.value = total.toFixed(2);
+        }
+
+        productSelect.addEventListener('change', function () {
+            const selectedOption = productSelect.options[productSelect.selectedIndex];
+            const productPrice = selectedOption ? selectedOption.getAttribute('data-price') : null;
+
+            if (productPrice) {
+                priceInput.value = productPrice;
+            } else {
+                priceInput.value = '';
+            }
+
+            updateLineTotal();
+        });
+
+        quantityInput.addEventListener('input', updateLineTotal);
+        priceInput.addEventListener('input', updateLineTotal);
+
+        updatePriceFromProduct();
+    });
+</script>
+
+</body>
+</html>

@@ -2,13 +2,13 @@
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Sklad System | Поступление</title>
+    <title>Sklad System | Отгрузка</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
 
 <div class="app-layout">
-    <div th:replace="~{fragments/sidebar :: sidebar('receipts')}"></div>
+    <div th:replace="~{fragments/sidebar :: sidebar('shipments')}"></div>
 
     <main class="main-content">
         <div th:replace="~{fragments/header :: header(${pageTitle}, ${pageSubtitle})}"></div>
@@ -16,24 +16,24 @@
         <section class="content-card form-card">
             <div class="section-header">
                 <div>
-                    <h2 th:text="${pageTitle}">Форма поступления</h2>
-                    <p th:text="${pageSubtitle}">Работа с документом поступления</p>
+                    <h2 th:text="${pageTitle}">Форма отгрузки</h2>
+                    <p th:text="${pageSubtitle}">Работа с документом отгрузки</p>
                 </div>
 
-                <div class="header-actions" th:if="${receipt.id != null}">
-                    <a th:href="@{/receipts/{id}/items(id=${receipt.id})}" class="btn btn-secondary">Открыть позиции</a>
+                <div class="header-actions" th:if="${shipment.id != null}">
+                    <a th:href="@{/shipments/{id}/items(id=${shipment.id})}" class="btn btn-secondary">Открыть позиции</a>
                 </div>
             </div>
 
-            <form th:object="${receipt}"
+            <form th:object="${shipment}"
                   method="post"
                   class="product-form"
-                  th:attr="action=${receipt.id == null} ? '/receipts' : '/receipts/' + ${receipt.id}">
+                  th:attr="action=${shipment.id == null} ? '/shipments' : '/shipments/' + ${shipment.id}">
 
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="docNumber">Номер документа</label>
-                        <input id="docNumber" type="text" th:field="*{docNumber}" required>
+                        <input id="docNumber" type="text" th:field="*{docNumber}" readonly required>
                     </div>
 
                     <div class="form-group">
@@ -53,8 +53,8 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="partnerName">Поставщик</label>
-                        <input id="partnerName" type="text" th:field="*{partnerName}" placeholder="Название поставщика" required>
+                        <label for="partnerName">Куда отгружается</label>
+                        <input id="partnerName" type="text" th:field="*{partnerName}" placeholder="Например: Магазин 1" required>
                     </div>
 
                     <div class="form-group">
@@ -72,7 +72,7 @@
                 </div>
 
                 <div class="form-actions">
-                    <a th:href="@{/receipts}" class="btn btn-light">Отмена</a>
+                    <a th:href="@{/shipments}" class="btn btn-light">Отмена</a>
                     <button type="submit" class="btn btn-primary" th:text="${submitButtonText}">Сохранить</button>
                 </div>
             </form>

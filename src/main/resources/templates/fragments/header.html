@@ -2,19 +2,36 @@
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <body>
 
-<header class="topbar" th:fragment="header(title, subtitle)">
-    <div class="topbar-left">
+<header class="page-header" th:fragment="header(title, subtitle)">
+    <div class="page-header-left">
         <h1 th:text="${title}">Заголовок</h1>
         <p th:text="${subtitle}">Подзаголовок</p>
     </div>
 
-    <div class="topbar-right">
-        <form th:action="@{/products}" method="get" class="global-search">
-            <input type="text" name="search" placeholder="Поиск по товарам или артикулу">
-            <button type="submit">Найти</button>
-        </form>
+    <div class="page-header-right" th:if="${currentUser != null}">
+        <div class="user-card">
+            <div class="user-card-top">
+                <div class="user-avatar"
+                     th:text="${#strings.substring(currentUser.displayName, 0, 1)}">A</div>
 
-        <div class="user-badge">Админ</div>
+                <div class="user-meta">
+                    <div class="user-name" th:text="${currentUser.displayName}">Пользователь</div>
+                    <div class="user-role" th:text="${currentUser.roleLabelRu}">Администратор</div>
+                </div>
+            </div>
+
+            <form th:action="@{/switch-user}" method="post" class="user-switch-form">
+                <label for="userId" class="user-switch-label">Активный пользователь</label>
+                <select id="userId" name="userId" class="user-switch-select" onchange="this.form.submit()">
+                    <option th:each="user : ${switchableUsers}"
+                            th:value="${user.id}"
+                            th:selected="${currentUser.id == user.id}"
+                            th:text="${user.displayName}">
+                        Пользователь
+                    </option>
+                </select>
+            </form>
+        </div>
     </div>
 </header>
 

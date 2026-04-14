@@ -19,6 +19,10 @@
                     <h2 th:text="${pageTitle}">Форма поступления</h2>
                     <p th:text="${pageSubtitle}">Работа с документом поступления</p>
                 </div>
+
+                <div class="header-actions" th:if="${receipt.id != null}">
+                    <a th:href="@{/receipts/{id}/items(id=${receipt.id})}" class="btn btn-secondary">Открыть позиции</a>
+                </div>
             </div>
 
             <form th:object="${receipt}"
@@ -29,16 +33,7 @@
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="docNumber">Номер документа</label>
-                        <input id="docNumber" type="text" th:field="*{docNumber}" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="docStatus">Статус</label>
-                        <select id="docStatus" th:field="*{docStatus}" required>
-                            <option value="DRAFT">DRAFT</option>
-                            <option value="POSTED">POSTED</option>
-                            <option value="CANCELLED">CANCELLED</option>
-                        </select>
+                        <input id="docNumber" type="text" th:field="*{docNumber}" readonly required>
                     </div>
 
                     <div class="form-group">
@@ -58,13 +53,15 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="counterpartyId">Поставщик</label>
-                        <select id="counterpartyId" th:field="*{counterpartyId}">
-                            <option value="">Выбери поставщика</option>
-                            <option th:each="supplier : ${suppliers}"
-                                    th:value="${supplier.id}"
-                                    th:text="${supplier.name}">
-                            </option>
+                        <label for="partnerName">Поставщик</label>
+                        <input id="partnerName" type="text" th:field="*{partnerName}" placeholder="Название поставщика" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="docStatus">Статус</label>
+                        <select id="docStatus" th:field="*{docStatus}" required>
+                            <option value="DRAFT">DRAFT</option>
+                            <option value="CANCELLED">CANCELLED</option>
                         </select>
                     </div>
 

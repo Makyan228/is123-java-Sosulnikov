@@ -11,13 +11,13 @@
     <div th:replace="~{fragments/sidebar :: sidebar('receipts')}"></div>
 
     <main class="main-content">
-        <div th:replace="~{fragments/header :: header('Поступления', 'Шапки документов поступления из STOCK_DOCUMENT')}"></div>
+        <div th:replace="~{fragments/header :: header('Поступления', 'Простые документы прихода товара')}"></div>
 
         <section class="content-card">
             <div class="section-header">
                 <div>
                     <h2>Список поступлений</h2>
-                    <p>Показываются документы с DOC_TYPE = RECEIPT</p>
+                    <p>Документы типа IN</p>
                 </div>
 
                 <a th:href="@{/receipts/new}" class="btn btn-primary">Создать поступление</a>
@@ -29,10 +29,10 @@
                     <tr>
                         <th>ID</th>
                         <th>Номер</th>
-                        <th>Статус</th>
                         <th>Дата</th>
                         <th>Склад</th>
                         <th>Поставщик</th>
+                        <th>Статус</th>
                         <th>Примечание</th>
                         <th>Действия</th>
                     </tr>
@@ -40,18 +40,30 @@
                     <tbody>
                     <tr th:each="receipt : ${receipts}">
                         <td th:text="${receipt.id}">1</td>
-                        <td th:text="${receipt.docNumber}">REC-001</td>
-                        <td th:text="${receipt.docStatus}">DRAFT</td>
+                        <td th:text="${receipt.docNumber}">IN-001</td>
                         <td th:text="${receipt.docDate}">2026-04-13</td>
                         <td th:text="${receipt.warehouseName}">Склад</td>
-                        <td th:text="${receipt.counterpartyName}">Поставщик</td>
+                        <td th:text="${receipt.partnerName}">Поставщик</td>
+                        <td th:text="${receipt.docStatus}">DRAFT</td>
                         <td th:text="${receipt.notes}">Примечание</td>
                         <td>
+                        <td>
                             <div class="table-actions">
+                                <a th:href="@{/receipts/{id}/items(id=${receipt.id})}" class="btn btn-primary btn-small">
+                                    Позиции
+                                </a>
+
                                 <a th:href="@{/receipts/{id}/edit(id=${receipt.id})}" class="btn btn-secondary btn-small">
                                     Редактировать
                                 </a>
+
+                                <form th:action="@{/receipts/{id}/delete(id=${receipt.id})}"
+                                      method="post"
+                                      onsubmit="return confirm('Удалить это поступление вместе со всеми позициями?');">
+                                    <button type="submit" class="btn btn-danger btn-small">Удалить</button>
+                                </form>
                             </div>
+                        </td>
                         </td>
                     </tr>
                     </tbody>

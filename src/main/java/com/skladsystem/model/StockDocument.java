@@ -14,8 +14,7 @@ public class StockDocument {
     private Long warehouseId;
     private String warehouseName;
 
-    private Long counterpartyId;
-    private String counterpartyName;
+    private String partnerName;
 
     private Integer createdBy;
     private String notes;
@@ -80,20 +79,12 @@ public class StockDocument {
         this.warehouseName = warehouseName;
     }
 
-    public Long getCounterpartyId() {
-        return counterpartyId;
+    public String getPartnerName() {
+        return partnerName;
     }
 
-    public void setCounterpartyId(Long counterpartyId) {
-        this.counterpartyId = counterpartyId;
-    }
-
-    public String getCounterpartyName() {
-        return counterpartyName;
-    }
-
-    public void setCounterpartyName(String counterpartyName) {
-        this.counterpartyName = counterpartyName;
+    public void setPartnerName(String partnerName) {
+        this.partnerName = partnerName;
     }
 
     public Integer getCreatedBy() {

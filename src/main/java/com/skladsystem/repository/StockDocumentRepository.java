@@ -13,6 +13,7 @@ import java.util.List;
 public class StockDocumentRepository {
 
     private static final String RECEIPT_TYPE = "IN";
+    private static final String SHIPMENT_TYPE = "OUT";
     private static final String DRAFT_STATUS = "DRAFT";
 
     private final JdbcTemplate jdbcTemplate;
@@ -38,9 +39,7 @@ public class StockDocumentRepository {
         document.setWarehouseId(rs.wasNull() ? null : warehouseId);
         document.setWarehouseName(rs.getString("warehouse_name"));
 
-        long counterpartyId = rs.getLong("counterparty_id");
-        document.setCounterpartyId(rs.wasNull() ? null : counterpartyId);
-        document.setCounterpartyName(rs.getString("counterparty_name"));
+        document.setPartnerName(rs.getString("partner_name"));
 
         int createdBy = rs.getInt("created_by");
         document.setCreatedBy(rs.wasNull() ? null : createdBy);
@@ -56,6 +55,54 @@ public class StockDocumentRepository {
     };
 
     public List<StockDocument> findAllReceipts() {
+        return findAllByType(RECEIPT_TYPE);
+    }
+
+    public List<StockDocument> findAllShipments() {
+        return findAllByType(SHIPMENT_TYPE);
+    }
+
+    public StockDocument findReceiptById(Long id) {
+        return findByIdAndType(id, RECEIPT_TYPE);
+    }
+
+    public StockDocument findShipmentById(Long id) {
+        return findByIdAndType(id, SHIPMENT_TYPE);
+    }
+
+    public String getNextReceiptNumber() {
+        return getNextDocNumber("IN", RECEIPT_TYPE);
+    }
+
+    public String getNextShipmentNumber() {
+        return getNextDocNumber("OUT", SHIPMENT_TYPE);
+    }
+
+    public Long saveReceiptAndReturnId(StockDocument document) {
+        return saveDocumentAndReturnId(document, RECEIPT_TYPE);
+    }
+
+    public Long saveShipmentAndReturnId(StockDocument document) {
+        return saveDocumentAndReturnId(document, SHIPMENT_TYPE);
+    }
+
+    public void updateReceipt(StockDocument document) {
+        updateDocument(document, RECEIPT_TYPE);
+    }
+
+    public void updateShipment(StockDocument document) {
+        updateDocument(document, SHIPMENT_TYPE);
+    }
+
+    public void deleteReceiptById(Long id) {
+        deleteByIdAndType(id, RECEIPT_TYPE);
+    }
+
+    public void deleteShipmentById(Long id) {
+        deleteByIdAndType(id, SHIPMENT_TYPE);
+    }
+
+    private List<StockDocument> findAllByType(String docType) {
         String sql = """
                 select
                     sd.id,
@@ -65,22 +112,20 @@ public class StockDocumentRepository {
                     sd.doc_date,
                     sd.warehouse_id,
                     w.name as warehouse_name,
-                    sd.counterparty_id,
-                    c.name as counterparty_name,
+                    sd.partner_name,
                     sd.created_by,
                     sd.notes,
                     sd.created_at
                 from stock_document sd
                 join warehouse w on w.id = sd.warehouse_id
-                left join counterparty c on c.id = sd.counterparty_id
                 where sd.doc_type = ?
                 order by sd.doc_date desc, sd.id desc
                 """;
 
-        return jdbcTemplate.query(sql, stockDocumentRowMapper, RECEIPT_TYPE);
+        return jdbcTemplate.query(sql, stockDocumentRowMapper, docType);
     }
 
-    public StockDocument findReceiptById(Long id) {
+    private StockDocument findByIdAndType(Long id, String docType) {
         String sql = """
                 select
                     sd.id,
@@ -90,24 +135,74 @@ public class StockDocumentRepository {
                     sd.doc_date,
                     sd.warehouse_id,
                     w.name as warehouse_name,
-                    sd.counterparty_id,
-                    c.name as counterparty_name,
+                    sd.partner_name,
                     sd.created_by,
                     sd.notes,
                     sd.created_at
                 from stock_document sd
                 join warehouse w on w.id = sd.warehouse_id
-                left join counterparty c on c.id = sd.counterparty_id
                 where sd.doc_type = ?
                   and sd.id = ?
                 """;
 
-        List<StockDocument> documents = jdbcTemplate.query(sql, stockDocumentRowMapper, RECEIPT_TYPE, id);
+        List<StockDocument> documents = jdbcTemplate.query(sql, stockDocumentRowMapper, docType, id);
         return documents.isEmpty() ? null : documents.get(0);
     }
 
-    public void saveReceipt(StockDocument document) {
-        Integer createdBy = findFirstActiveUserId();
+    private String getNextDocNumber(String prefix, String docType) {
+        String sql = """
+                select doc_number
+                from stock_document
+                where doc_type = ?
+                  and doc_number starting with ?
+                order by id desc
+                rows 100
+                """;
+
+        List<String> numbers = jdbcTemplate.query(
+                sql,
+                (rs, rowNum) -> rs.getString("doc_number"),
+                docType,
+                prefix + "-"
+        );
+
+        int maxNumber = 0;
+
+        for (String docNumber : numbers) {
+            if (docNumber == null) {
+                continue;
+            }
+
+            String expectedPrefix = prefix + "-";
+            if (!docNumber.startsWith(expectedPrefix)) {
+                continue;
+            }
+
+            String numericPart = docNumber.substring(expectedPrefix.length()).trim();
+
+            try {
+                int value = Integer.parseInt(numericPart);
+                if (value > maxNumber) {
+                    maxNumber = value;
+                }
+            } catch (NumberFormatException ignored) {
+            }
+        }
+
+        return prefix + "-" + String.format("%03d", maxNumber + 1);
+    }
+
+    private Long saveDocumentAndReturnId(StockDocument document, String docType) {
+        Integer createdBy = document.getCreatedBy() != null
+                ? document.getCreatedBy()
+                : findFirstActiveUserId();
+
+        String docNumber = nullIfBlank(document.getDocNumber());
+        if (docNumber == null) {
+            docNumber = RECEIPT_TYPE.equals(docType)
+                    ? getNextReceiptNumber()
+                    : getNextShipmentNumber();
+        }
 
         String sql = """
                 insert into stock_document (
@@ -116,28 +211,36 @@ public class StockDocumentRepository {
                     doc_status,
                     doc_date,
                     warehouse_id,
-                    counterparty_id,
+                    partner_name,
                     created_by,
                     notes,
                     created_at
                 )
                 values (?, ?, ?, ?, ?, ?, ?, ?, current_timestamp)
+                returning id
                 """;
 
-        jdbcTemplate.update(
+        Number result = jdbcTemplate.queryForObject(
                 sql,
-                nullIfBlank(document.getDocNumber()),
-                RECEIPT_TYPE,
+                Number.class,
+                docNumber,
+                docType,
                 DRAFT_STATUS,
                 document.getDocDate(),
                 document.getWarehouseId(),
-                document.getCounterpartyId(),
+                nullIfBlank(document.getPartnerName()),
                 createdBy,
                 nullIfBlank(document.getNotes())
         );
+
+        if (result == null) {
+            throw new IllegalStateException("Не удалось получить ID созданного документа.");
+        }
+
+        return result.longValue();
     }
 
-    public void updateReceipt(StockDocument document) {
+    private void updateDocument(StockDocument document, String docType) {
         String sql = """
                 update stock_document
                 set
@@ -145,7 +248,7 @@ public class StockDocumentRepository {
                     doc_status = ?,
                     doc_date = ?,
                     warehouse_id = ?,
-                    counterparty_id = ?,
+                    partner_name = ?,
                     notes = ?
                 where id = ?
                   and doc_type = ?
@@ -157,11 +260,21 @@ public class StockDocumentRepository {
                 nullIfBlank(document.getDocStatus()),
                 document.getDocDate(),
                 document.getWarehouseId(),
-                document.getCounterpartyId(),
+                nullIfBlank(document.getPartnerName()),
                 nullIfBlank(document.getNotes()),
                 document.getId(),
-                RECEIPT_TYPE
+                docType
         );
+    }
+
+    private void deleteByIdAndType(Long id, String docType) {
+        String sql = """
+                delete from stock_document
+                where id = ?
+                  and doc_type = ?
+                """;
+
+        jdbcTemplate.update(sql, id, docType);
     }
 
     private Integer findFirstActiveUserId() {
