@@ -11,25 +11,109 @@
     <div th:replace="~{fragments/sidebar :: sidebar('products')}"></div>
 
     <main class="main-content">
-        <div th:replace="~{fragments/header :: header('Товары', 'Список товаров, категории, единицы и остатки')}"></div>
+        <div th:replace="~{fragments/header :: header('Товары', 'Каталог товаров и текущие остатки')}"></div>
+
+        <section class="content-card">
+            <div class="section-header">
+                <div>
+                    <h2>Фильтрация товаров</h2>
+                    <p>Поиск и отбор по основным характеристикам</p>
+                </div>
+
+                <a th:if="${canManageProducts}" th:href="@{/products/new}" class="btn btn-primary">Добавить товар</a>
+            </div>
+
+            <form th:action="@{/products}" method="get" class="product-form">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="search">Поиск</label>
+                        <input id="search"
+                               type="text"
+                               name="search"
+                               th:value="${search}"
+                               placeholder="Название, артикул или штрихкод">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="categoryId">Категория</label>
+                        <select id="categoryId" name="categoryId">
+                            <option value="">Все категории</option>
+                            <option th:each="category : ${categories}"
+                                    th:value="${category.id}"
+                                    th:selected="${categoryId != null and categoryId == category.id}"
+                                    th:text="${category.name}">
+                                Категория
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="unitId">Единица измерения</label>
+                        <select id="unitId" name="unitId">
+                            <option value="">Все единицы</option>
+                            <option th:each="unit : ${units}"
+                                    th:value="${unit.id}"
+                                    th:selected="${unitId != null and unitId == unit.id}"
+                                    th:text="${unit.displayLabelRu}">
+                                Единица
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="sortBy">Сортировка</label>
+                        <select id="sortBy" name="sortBy">
+                            <option value="" th:selected="${sortBy == null or sortBy == ''}">По названию</option>
+                            <option value="nameAsc" th:selected="${sortBy == 'nameAsc'}">Название А-Я</option>
+                            <option value="priceAsc" th:selected="${sortBy == 'priceAsc'}">Цена по возрастанию</option>
+                            <option value="priceDesc" th:selected="${sortBy == 'priceDesc'}">Цена по убыванию</option>
+                            <option value="quantityAsc" th:selected="${sortBy == 'quantityAsc'}">Остаток по возрастанию</option>
+                            <option value="quantityDesc" th:selected="${sortBy == 'quantityDesc'}">Остаток по убыванию</option>
+                            <option value="newest" th:selected="${sortBy == 'newest'}">Сначала новые</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="priceFrom">Цена от</label>
+                        <input id="priceFrom" type="number" step="0.01" min="0" name="priceFrom" th:value="${priceFrom}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="priceTo">Цена до</label>
+                        <input id="priceTo" type="number" step="0.01" min="0" name="priceTo" th:value="${priceTo}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="quantityFrom">Остаток от</label>
+                        <input id="quantityFrom" type="number" step="0.01" min="0" name="quantityFrom" th:value="${quantityFrom}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="quantityTo">Остаток до</label>
+                        <input id="quantityTo" type="number" step="0.01" min="0" name="quantityTo" th:value="${quantityTo}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="lowStockOnly">Минимальный остаток</label>
+                        <select id="lowStockOnly" name="lowStockOnly">
+                            <option value="" th:selected="${lowStockOnly == null or !lowStockOnly}">Все товары</option>
+                            <option value="true" th:selected="${lowStockOnly != null and lowStockOnly}">Только ниже минимума</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <a th:href="@{/products}" class="btn btn-light">Сбросить</a>
+                    <button type="submit" class="btn btn-primary">Применить фильтры</button>
+                </div>
+            </form>
+        </section>
 
         <section class="content-card">
             <div class="section-header">
                 <div>
                     <h2>Список товаров</h2>
-                    <p>Данные из PRODUCT, PRODUCT_CATEGORY, MEASURE_UNIT и документов склада</p>
-                </div>
-
-                <div class="header-actions">
-                    <form th:action="@{/products}" method="get" class="page-search">
-                        <input type="text"
-                               name="search"
-                               th:value="${search}"
-                               placeholder="Поиск по названию, артикулу или штрихкоду">
-                        <button type="submit" class="btn btn-secondary">Искать</button>
-                    </form>
-
-                    <a th:if="${canManageProducts}" th:href="@{/products/new}" class="btn btn-primary">Добавить товар</a>
+                    <p>Отфильтрованный результат по выбранным параметрам</p>
                 </div>
             </div>
 
@@ -57,9 +141,9 @@
                         <td th:text="${product.name}">Товар</td>
                         <td th:text="${product.categoryName}">Категория</td>
                         <td th:text="${product.unitName == 'pcs' ? 'шт' : (product.unitName == 'kg' ? 'кг' : (product.unitName == 'l' ? 'л' : product.unitName))}">шт</td>
-                        <td th:text="${product.price}">100.00</td>
-                        <td th:text="${product.minStock}">5</td>
-                        <td th:text="${product.totalQuantity}">20</td>
+                        <td th:text="${product.priceFormattedRu}">100,00 ₽</td>
+                        <td th:text="${product.minStockFormattedRu}">5</td>
+                        <td th:text="${product.totalQuantityFormattedRu}">20</td>
                         <td th:if="${canManageProducts}">
                             <div class="table-actions">
                                 <a th:href="@{/products/{id}/edit(id=${product.id})}" class="btn btn-secondary btn-small">
@@ -79,9 +163,9 @@
             </div>
 
             <div class="empty-state" th:if="${#lists.isEmpty(products)}">
-                <h3>Товаров пока нет</h3>
-                <p>Добавь первую позицию, и список начнет заполняться.</p>
-                <a th:if="${canManageProducts}" th:href="@{/products/new}" class="btn btn-primary">Добавить товар</a>
+                <h3>Ничего не найдено</h3>
+                <p>Попробуй изменить параметры фильтрации.</p>
+                <a th:href="@{/products}" class="btn btn-light">Сбросить фильтры</a>
             </div>
         </section>
     </main>

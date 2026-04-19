@@ -5,8 +5,11 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Repository
@@ -55,11 +58,29 @@ public class StockDocumentRepository {
     };
 
     public List<StockDocument> findAllReceipts() {
-        return findAllByType(RECEIPT_TYPE);
+        return findAllReceipts(null, null, null, null, null, null);
     }
 
     public List<StockDocument> findAllShipments() {
-        return findAllByType(SHIPMENT_TYPE);
+        return findAllShipments(null, null, null, null, null, null);
+    }
+
+    public List<StockDocument> findAllReceipts(LocalDate dateFrom,
+                                               LocalDate dateTo,
+                                               Long warehouseId,
+                                               String partnerName,
+                                               String status,
+                                               String docNumber) {
+        return findAllByType(RECEIPT_TYPE, dateFrom, dateTo, warehouseId, partnerName, status, docNumber);
+    }
+
+    public List<StockDocument> findAllShipments(LocalDate dateFrom,
+                                                LocalDate dateTo,
+                                                Long warehouseId,
+                                                String partnerName,
+                                                String status,
+                                                String docNumber) {
+        return findAllByType(SHIPMENT_TYPE, dateFrom, dateTo, warehouseId, partnerName, status, docNumber);
     }
 
     public StockDocument findReceiptById(Long id) {
@@ -102,8 +123,30 @@ public class StockDocumentRepository {
         deleteByIdAndType(id, SHIPMENT_TYPE);
     }
 
-    private List<StockDocument> findAllByType(String docType) {
-        String sql = """
+    public long countReceiptsByPeriod(LocalDate dateFrom, LocalDate dateTo) {
+        return countDocumentsByType(RECEIPT_TYPE, dateFrom, dateTo);
+    }
+
+    public long countShipmentsByPeriod(LocalDate dateFrom, LocalDate dateTo) {
+        return countDocumentsByType(SHIPMENT_TYPE, dateFrom, dateTo);
+    }
+
+    public BigDecimal sumReceiptsAmountByPeriod(LocalDate dateFrom, LocalDate dateTo) {
+        return sumDocumentAmountByType(RECEIPT_TYPE, dateFrom, dateTo);
+    }
+
+    public BigDecimal sumShipmentsAmountByPeriod(LocalDate dateFrom, LocalDate dateTo) {
+        return sumDocumentAmountByType(SHIPMENT_TYPE, dateFrom, dateTo);
+    }
+
+    private List<StockDocument> findAllByType(String docType,
+                                              LocalDate dateFrom,
+                                              LocalDate dateTo,
+                                              Long warehouseId,
+                                              String partnerName,
+                                              String status,
+                                              String docNumber) {
+        StringBuilder sql = new StringBuilder("""
                 select
                     sd.id,
                     sd.doc_number,
@@ -119,10 +162,94 @@ public class StockDocumentRepository {
                 from stock_document sd
                 join warehouse w on w.id = sd.warehouse_id
                 where sd.doc_type = ?
-                order by sd.doc_date desc, sd.id desc
-                """;
+                """);
 
-        return jdbcTemplate.query(sql, stockDocumentRowMapper, docType);
+        List<Object> params = new ArrayList<>();
+        params.add(docType);
+
+        if (dateFrom != null) {
+            sql.append(" and sd.doc_date >= ? ");
+            params.add(dateFrom);
+        }
+
+        if (dateTo != null) {
+            sql.append(" and sd.doc_date <= ? ");
+            params.add(dateTo);
+        }
+
+        if (warehouseId != null) {
+            sql.append(" and sd.warehouse_id = ? ");
+            params.add(warehouseId);
+        }
+
+        if (partnerName != null && !partnerName.isBlank()) {
+            sql.append(" and coalesce(sd.partner_name, '') containing ? ");
+            params.add(partnerName.trim());
+        }
+
+        if (status != null && !status.isBlank()) {
+            sql.append(" and coalesce(sd.doc_status, '') = ? ");
+            params.add(status.trim());
+        }
+
+        if (docNumber != null && !docNumber.isBlank()) {
+            sql.append(" and coalesce(sd.doc_number, '') containing ? ");
+            params.add(docNumber.trim());
+        }
+
+        sql.append(" order by sd.doc_date desc, sd.id desc ");
+
+        return jdbcTemplate.query(sql.toString(), stockDocumentRowMapper, params.toArray());
+    }
+
+    private long countDocumentsByType(String docType, LocalDate dateFrom, LocalDate dateTo) {
+        StringBuilder sql = new StringBuilder("""
+                select count(*)
+                from stock_document sd
+                where sd.doc_type = ?
+                """);
+
+        List<Object> params = new ArrayList<>();
+        params.add(docType);
+
+        if (dateFrom != null) {
+            sql.append(" and sd.doc_date >= ? ");
+            params.add(dateFrom);
+        }
+
+        if (dateTo != null) {
+            sql.append(" and sd.doc_date <= ? ");
+            params.add(dateTo);
+        }
+
+        Long result = jdbcTemplate.queryForObject(sql.toString(), Long.class, params.toArray());
+        return result != null ? result : 0L;
+    }
+
+    private BigDecimal sumDocumentAmountByType(String docType, LocalDate dateFrom, LocalDate dateTo) {
+        StringBuilder sql = new StringBuilder("""
+                select coalesce(sum(coalesce(sdi.quantity, 0) * coalesce(sdi.price, 0)), 0)
+                from stock_document sd
+                join stock_document_item sdi on sdi.document_id = sd.id
+                where sd.doc_type = ?
+                  and coalesce(sd.doc_status, '') <> 'CANCELLED'
+                """);
+
+        List<Object> params = new ArrayList<>();
+        params.add(docType);
+
+        if (dateFrom != null) {
+            sql.append(" and sd.doc_date >= ? ");
+            params.add(dateFrom);
+        }
+
+        if (dateTo != null) {
+            sql.append(" and sd.doc_date <= ? ");
+            params.add(dateTo);
+        }
+
+        BigDecimal result = jdbcTemplate.queryForObject(sql.toString(), BigDecimal.class, params.toArray());
+        return result != null ? result : BigDecimal.ZERO;
     }
 
     private StockDocument findByIdAndType(Long id, String docType) {

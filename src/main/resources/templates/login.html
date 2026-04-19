@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Sklad System | Вход</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="login-page-body">
+
+<div class="login-page-shell">
+    <div class="login-card-box">
+        <div class="login-card-brand">
+            <div class="login-card-logo">SK</div>
+            <div class="login-card-brand-text">
+                <div class="login-card-brand-title">Sklad System</div>
+                <div class="login-card-brand-subtitle">Вход в систему склада</div>
+            </div>
+        </div>
+
+        <div class="login-card-header">
+            <h1>Авторизация</h1>
+            <p>Выбери пользователя и введи пароль</p>
+        </div>
+
+        <div class="login-card-alert login-card-alert-error"
+             th:if="${errorMessage}"
+             th:text="${errorMessage}">
+            Неверный пароль
+        </div>
+
+        <div class="login-card-alert login-card-alert-success"
+             th:if="${successMessage}"
+             th:text="${successMessage}">
+            Вы вышли из системы
+        </div>
+
+        <form th:action="@{/login}" method="post" class="login-card-form">
+            <div class="login-card-field">
+                <label for="userId">Пользователь</label>
+                <select id="userId" name="userId" required>
+                    <option value="" disabled th:selected="${selectedUserId == null}">
+                        Выберите пользователя
+                    </option>
+                    <option th:each="user : ${users}"
+                            th:value="${user.id}"
+                            th:selected="${selectedUserId != null and selectedUserId == user.id}"
+                            th:text="${user.displayName}">
+                        Пользователь
+                    </option>
+                </select>
+            </div>
+
+            <div class="login-card-field">
+                <label for="password">Пароль</label>
+                <input id="password"
+                       type="password"
+                       name="password"
+                       placeholder="Введите пароль"
+                       required>
+            </div>
+
+            <button type="submit" class="login-card-submit">Войти</button>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>

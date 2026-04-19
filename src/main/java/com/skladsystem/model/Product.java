@@ -1,8 +1,12 @@
 package com.skladsystem.model;
 
 import java.math.BigDecimal;
+import java.text.NumberFormat;
+import java.util.Locale;
 
 public class Product {
+
+    private static final Locale RU_LOCALE = new Locale("ru", "RU");
 
     private Long id;
     private String article;
@@ -127,5 +131,37 @@ public class Product {
 
     public void setNotes(String notes) {
         this.notes = notes;
+    }
+
+    public String getPriceFormattedRu() {
+        return formatMoney(price);
+    }
+
+    public String getMinStockFormattedRu() {
+        return formatQuantity(minStock);
+    }
+
+    public String getTotalQuantityFormattedRu() {
+        return formatQuantity(totalQuantity);
+    }
+
+    private String formatQuantity(BigDecimal value) {
+        BigDecimal safeValue = value != null ? value : BigDecimal.ZERO;
+
+        NumberFormat format = NumberFormat.getNumberInstance(RU_LOCALE);
+        format.setMinimumFractionDigits(0);
+        format.setMaximumFractionDigits(0);
+
+        return format.format(safeValue);
+    }
+
+    private String formatMoney(BigDecimal value) {
+        BigDecimal safeValue = value != null ? value : BigDecimal.ZERO;
+
+        NumberFormat format = NumberFormat.getNumberInstance(RU_LOCALE);
+        format.setMinimumFractionDigits(2);
+        format.setMaximumFractionDigits(2);
+
+        return format.format(safeValue) + " ₽";
     }
 }

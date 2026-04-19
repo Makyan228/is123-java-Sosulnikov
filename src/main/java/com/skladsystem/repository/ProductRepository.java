@@ -6,6 +6,7 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 @Repository
@@ -87,31 +88,96 @@ public class ProductRepository {
     }
 
     public List<Product> findAll() {
-        String sql = baseSelect() + """
-                where coalesce(p.is_active, 0) = 1
-                order by p.name
-                """;
-
-        return jdbcTemplate.query(sql, productRowMapper);
+        return findFiltered(null, null, null, null, null, null, null, false, null);
     }
 
     public List<Product> search(String search) {
-        if (search == null || search.isBlank()) {
-            return findAll();
+        return findFiltered(search, null, null, null, null, null, null, false, null);
+    }
+
+    public List<Product> findFiltered(String search,
+                                      Long categoryId,
+                                      Long unitId,
+                                      BigDecimal priceFrom,
+                                      BigDecimal priceTo,
+                                      BigDecimal quantityFrom,
+                                      BigDecimal quantityTo,
+                                      boolean lowStockOnly,
+                                      String sortBy) {
+        StringBuilder sql = new StringBuilder(baseSelect());
+        List<Object> params = new ArrayList<>();
+
+        sql.append("""
+                where coalesce(p.is_active, 0) = 1
+                """);
+
+        if (search != null && !search.isBlank()) {
+            sql.append("""
+                      and (
+                        p.name containing ?
+                        or coalesce(p.article, '') containing ?
+                        or coalesce(p.barcode, '') containing ?
+                      )
+                    """);
+            String term = search.trim();
+            params.add(term);
+            params.add(term);
+            params.add(term);
         }
 
-        String sql = baseSelect() + """
-                where coalesce(p.is_active, 0) = 1
-                  and (
-                    p.name containing ?
-                    or coalesce(p.article, '') containing ?
-                    or coalesce(p.barcode, '') containing ?
-                  )
-                order by p.name
-                """;
+        if (categoryId != null) {
+            sql.append(" and p.category_id = ? ");
+            params.add(categoryId);
+        }
 
-        String term = search.trim();
-        return jdbcTemplate.query(sql, productRowMapper, term, term, term);
+        if (unitId != null) {
+            sql.append(" and p.unit_id = ? ");
+            params.add(unitId);
+        }
+
+        if (priceFrom != null) {
+            sql.append(" and coalesce(p.price, 0) >= ? ");
+            params.add(priceFrom);
+        }
+
+        if (priceTo != null) {
+            sql.append(" and coalesce(p.price, 0) <= ? ");
+            params.add(priceTo);
+        }
+
+        if (quantityFrom != null) {
+            sql.append(" and coalesce(q.total_quantity, 0) >= ? ");
+            params.add(quantityFrom);
+        }
+
+        if (quantityTo != null) {
+            sql.append(" and coalesce(q.total_quantity, 0) <= ? ");
+            params.add(quantityTo);
+        }
+
+        if (lowStockOnly) {
+            sql.append(" and coalesce(q.total_quantity, 0) <= coalesce(p.min_stock, 0) ");
+        }
+
+        sql.append(resolveOrderBy(sortBy));
+
+        return jdbcTemplate.query(sql.toString(), productRowMapper, params.toArray());
+    }
+
+    private String resolveOrderBy(String sortBy) {
+        if (sortBy == null || sortBy.isBlank()) {
+            return " order by p.name ";
+        }
+
+        return switch (sortBy) {
+            case "nameAsc" -> " order by p.name ";
+            case "priceAsc" -> " order by p.price asc, p.name ";
+            case "priceDesc" -> " order by p.price desc, p.name ";
+            case "quantityAsc" -> " order by coalesce(q.total_quantity, 0) asc, p.name ";
+            case "quantityDesc" -> " order by coalesce(q.total_quantity, 0) desc, p.name ";
+            case "newest" -> " order by p.id desc ";
+            default -> " order by p.name ";
+        };
     }
 
     public Product findById(Long id) {

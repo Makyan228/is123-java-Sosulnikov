@@ -24,6 +24,28 @@ public class ProductService {
         return productRepository.search(search);
     }
 
+    public List<Product> findFiltered(String search,
+                                      Long categoryId,
+                                      Long unitId,
+                                      BigDecimal priceFrom,
+                                      BigDecimal priceTo,
+                                      BigDecimal quantityFrom,
+                                      BigDecimal quantityTo,
+                                      boolean lowStockOnly,
+                                      String sortBy) {
+        return productRepository.findFiltered(
+                search,
+                categoryId,
+                unitId,
+                priceFrom,
+                priceTo,
+                quantityFrom,
+                quantityTo,
+                lowStockOnly,
+                sortBy
+        );
+    }
+
     public Product findById(Long id) {
         return productRepository.findById(id);
     }

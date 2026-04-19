@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.math.BigDecimal;
+
 @Controller
 public class ProductController {
 
@@ -33,14 +35,45 @@ public class ProductController {
 
     @GetMapping("/products")
     public String products(@RequestParam(value = "search", required = false) String search,
+                           @RequestParam(value = "categoryId", required = false) Long categoryId,
+                           @RequestParam(value = "unitId", required = false) Long unitId,
+                           @RequestParam(value = "priceFrom", required = false) BigDecimal priceFrom,
+                           @RequestParam(value = "priceTo", required = false) BigDecimal priceTo,
+                           @RequestParam(value = "quantityFrom", required = false) BigDecimal quantityFrom,
+                           @RequestParam(value = "quantityTo", required = false) BigDecimal quantityTo,
+                           @RequestParam(value = "lowStockOnly", required = false) Boolean lowStockOnly,
+                           @RequestParam(value = "sortBy", required = false) String sortBy,
                            Model model,
                            HttpSession session) {
         if (!currentUserService.canViewProducts(session)) {
             return "redirect:/";
         }
 
-        model.addAttribute("products", productService.search(search));
+        model.addAttribute("products", productService.findFiltered(
+                search,
+                categoryId,
+                unitId,
+                priceFrom,
+                priceTo,
+                quantityFrom,
+                quantityTo,
+                Boolean.TRUE.equals(lowStockOnly),
+                sortBy
+        ));
+
+        model.addAttribute("categories", productCategoryRepository.findAll());
+        model.addAttribute("units", measureUnitRepository.findAll());
+
         model.addAttribute("search", search);
+        model.addAttribute("categoryId", categoryId);
+        model.addAttribute("unitId", unitId);
+        model.addAttribute("priceFrom", priceFrom);
+        model.addAttribute("priceTo", priceTo);
+        model.addAttribute("quantityFrom", quantityFrom);
+        model.addAttribute("quantityTo", quantityTo);
+        model.addAttribute("lowStockOnly", lowStockOnly);
+        model.addAttribute("sortBy", sortBy);
+
         return "products";
     }
 
@@ -57,7 +90,7 @@ public class ProductController {
         model.addAttribute("categories", productCategoryRepository.findAll());
         model.addAttribute("units", measureUnitRepository.findAll());
         model.addAttribute("pageTitle", "Новый товар");
-        model.addAttribute("pageSubtitle", "Добавление записи в таблицу PRODUCT");
+        model.addAttribute("pageSubtitle", "Добавление нового товара");
         model.addAttribute("submitButtonText", "Сохранить товар");
 
         return "product-form";

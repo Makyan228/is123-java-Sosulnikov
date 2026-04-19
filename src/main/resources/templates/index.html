@@ -11,9 +11,37 @@
     <div th:replace="~{fragments/sidebar :: sidebar('dashboard')}"></div>
 
     <main class="main-content">
-        <div th:replace="~{fragments/header :: header('Главная панель', 'Краткая сводка по складу')}"></div>
+        <div th:replace="~{fragments/header :: header('Главная панель', 'Общая информация по складу и движению товаров')}"></div>
 
-        <section class="cards-grid">
+        <section class="content-card">
+            <div class="section-header">
+                <div>
+                    <h2>Период статистики</h2>
+                    <p>Выбери даты, чтобы посмотреть движение за нужный период</p>
+                </div>
+            </div>
+
+            <form th:action="@{/}" method="get" class="product-form">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="dateFrom">Дата от</label>
+                        <input id="dateFrom" type="date" name="dateFrom" th:value="${dateFrom}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dateTo">Дата до</label>
+                        <input id="dateTo" type="date" name="dateTo" th:value="${dateTo}">
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <a th:href="@{/}" class="btn btn-light">Сбросить</a>
+                    <button type="submit" class="btn btn-primary">Применить</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="cards-grid" style="margin-top: 24px;">
             <div class="stat-card">
                 <div class="stat-label">Активных товаров</div>
                 <div class="stat-value" th:text="${productsCount}">0</div>
@@ -21,7 +49,7 @@
 
             <div class="stat-card">
                 <div class="stat-label">Общий остаток</div>
-                <div class="stat-value" th:text="${totalQuantity}">0</div>
+                <div class="stat-value" th:text="${totalQuantityFormatted}">0</div>
             </div>
 
             <div class="stat-card">
@@ -31,7 +59,27 @@
 
             <div class="stat-card">
                 <div class="stat-label">Стоимость остатков</div>
-                <div class="stat-value" th:text="${totalInventoryValue}">0</div>
+                <div class="stat-value" th:text="${totalInventoryValueFormatted}">0,00 ₽</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Поступлений за период</div>
+                <div class="stat-value" th:text="${receiptsCount}">0</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Отгрузок за период</div>
+                <div class="stat-value" th:text="${shipmentsCount}">0</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Сумма поступлений</div>
+                <div class="stat-value" th:text="${receiptsAmountFormatted}">0,00 ₽</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Сумма отгрузок</div>
+                <div class="stat-value" th:text="${shipmentsAmountFormatted}">0,00 ₽</div>
             </div>
         </section>
 
@@ -39,7 +87,7 @@
             <div class="section-header">
                 <div>
                     <h2>Последние товары</h2>
-                    <p>Последние 5 записей из таблицы PRODUCT</p>
+                    <p>Недавно добавленные позиции</p>
                 </div>
 
                 <a th:href="@{/products}" class="btn btn-secondary">Открыть все</a>
@@ -65,8 +113,8 @@
                         <td th:text="${product.name}">Товар</td>
                         <td th:text="${product.categoryName}">Категория</td>
                         <td th:text="${product.unitName}">шт</td>
-                        <td th:text="${product.price}">100.00</td>
-                        <td th:text="${product.totalQuantity}">0</td>
+                        <td th:text="${product.priceFormattedRu}">100,00 ₽</td>
+                        <td th:text="${product.totalQuantityFormattedRu}">0</td>
                     </tr>
                     </tbody>
                 </table>

@@ -6,6 +6,7 @@ public class AppUser {
     private String username;
     private String fullName;
     private String roleName;
+    private String password;
     private Boolean active;
 
     public AppUser() {
@@ -43,6 +44,14 @@ public class AppUser {
         this.roleName = roleName;
     }
 
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
     public Boolean getActive() {
         return active;
     }
@@ -55,7 +64,10 @@ public class AppUser {
         if (fullName != null && !fullName.isBlank()) {
             return fullName;
         }
-        return username != null ? username : "Пользователь";
+        if (username != null && !username.isBlank()) {
+            return username;
+        }
+        return "Пользователь";
     }
 
     public String getRoleLabelRu() {

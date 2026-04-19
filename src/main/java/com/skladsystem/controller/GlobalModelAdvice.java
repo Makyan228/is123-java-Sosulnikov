@@ -1,6 +1,5 @@
 package com.skladsystem.controller;
 
-import com.skladsystem.repository.AppUserRepository;
 import com.skladsystem.service.CurrentUserService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.ui.Model;
@@ -11,18 +10,14 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 public class GlobalModelAdvice {
 
     private final CurrentUserService currentUserService;
-    private final AppUserRepository appUserRepository;
 
-    public GlobalModelAdvice(CurrentUserService currentUserService,
-                             AppUserRepository appUserRepository) {
+    public GlobalModelAdvice(CurrentUserService currentUserService) {
         this.currentUserService = currentUserService;
-        this.appUserRepository = appUserRepository;
     }
 
     @ModelAttribute
     public void addCommonData(Model model, HttpSession session) {
         model.addAttribute("currentUser", currentUserService.getCurrentUser(session));
-        model.addAttribute("switchableUsers", appUserRepository.findAllActive());
 
         model.addAttribute("canViewProducts", currentUserService.canViewProducts(session));
         model.addAttribute("canManageProducts", currentUserService.canManageProducts(session));

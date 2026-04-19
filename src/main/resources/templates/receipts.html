@@ -11,16 +11,77 @@
     <div th:replace="~{fragments/sidebar :: sidebar('receipts')}"></div>
 
     <main class="main-content">
-        <div th:replace="~{fragments/header :: header('Поступления', 'Простые документы прихода товара')}"></div>
+        <div th:replace="~{fragments/header :: header('Поступления', 'Документы поступления товара')}"></div>
+
+        <section class="content-card">
+            <div class="section-header">
+                <div>
+                    <h2>Фильтрация поступлений</h2>
+                    <p>Отбор документов по дате, складу, поставщику и статусу</p>
+                </div>
+
+                <a th:href="@{/receipts/new}" class="btn btn-primary">Создать поступление</a>
+            </div>
+
+            <form th:action="@{/receipts}" method="get" class="product-form">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="dateFrom">Дата от</label>
+                        <input id="dateFrom" type="date" name="dateFrom" th:value="${dateFrom}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dateTo">Дата до</label>
+                        <input id="dateTo" type="date" name="dateTo" th:value="${dateTo}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="warehouseId">Склад</label>
+                        <select id="warehouseId" name="warehouseId">
+                            <option value="">Все склады</option>
+                            <option th:each="warehouse : ${warehouses}"
+                                    th:value="${warehouse.id}"
+                                    th:selected="${warehouseId != null and warehouseId == warehouse.id}"
+                                    th:text="${warehouse.name}">
+                                Склад
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="partnerName">Поставщик</label>
+                        <input id="partnerName" type="text" name="partnerName" th:value="${partnerName}" placeholder="Название поставщика">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="status">Статус</label>
+                        <select id="status" name="status">
+                            <option value="">Все статусы</option>
+                            <option value="DRAFT" th:selected="${status == 'DRAFT'}">Черновик</option>
+                            <option value="POSTED" th:selected="${status == 'POSTED'}">Проведен</option>
+                            <option value="CANCELLED" th:selected="${status == 'CANCELLED'}">Отменен</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="docNumber">Номер документа</label>
+                        <input id="docNumber" type="text" name="docNumber" th:value="${docNumber}" placeholder="Например IN-001">
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <a th:href="@{/receipts}" class="btn btn-light">Сбросить</a>
+                    <button type="submit" class="btn btn-primary">Применить фильтры</button>
+                </div>
+            </form>
+        </section>
 
         <section class="content-card">
             <div class="section-header">
                 <div>
                     <h2>Список поступлений</h2>
-                    <p>Документы типа IN</p>
+                    <p>Отфильтрованный список документов</p>
                 </div>
-
-                <a th:href="@{/receipts/new}" class="btn btn-primary">Создать поступление</a>
             </div>
 
             <div class="table-wrapper" th:if="${!#lists.isEmpty(receipts)}">
@@ -47,7 +108,6 @@
                         <td th:text="${receipt.docStatus}">DRAFT</td>
                         <td th:text="${receipt.notes}">Примечание</td>
                         <td>
-                        <td>
                             <div class="table-actions">
                                 <a th:href="@{/receipts/{id}/items(id=${receipt.id})}" class="btn btn-primary btn-small">
                                     Позиции
@@ -64,16 +124,15 @@
                                 </form>
                             </div>
                         </td>
-                        </td>
                     </tr>
                     </tbody>
                 </table>
             </div>
 
             <div class="empty-state" th:if="${#lists.isEmpty(receipts)}">
-                <h3>Поступлений пока нет</h3>
-                <p>Создай первый документ поступления.</p>
-                <a th:href="@{/receipts/new}" class="btn btn-primary">Создать поступление</a>
+                <h3>Ничего не найдено</h3>
+                <p>Попробуй изменить параметры фильтрации.</p>
+                <a th:href="@{/receipts}" class="btn btn-light">Сбросить фильтры</a>
             </div>
         </section>
     </main>

@@ -11,12 +11,14 @@ import com.skladsystem.repository.StorageLocationRepository;
 import com.skladsystem.repository.WarehouseRepository;
 import com.skladsystem.service.CurrentUserService;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
@@ -47,12 +49,32 @@ public class ShipmentController {
     }
 
     @GetMapping("/shipments")
-    public String shipments(Model model, HttpSession session) {
+    public String shipments(@RequestParam(value = "dateFrom", required = false)
+                            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
+                            @RequestParam(value = "dateTo", required = false)
+                            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
+                            @RequestParam(value = "warehouseId", required = false) Long warehouseId,
+                            @RequestParam(value = "partnerName", required = false) String partnerName,
+                            @RequestParam(value = "status", required = false) String status,
+                            @RequestParam(value = "docNumber", required = false) String docNumber,
+                            Model model,
+                            HttpSession session) {
         if (!currentUserService.canAccessShipments(session)) {
             return "redirect:/";
         }
 
-        model.addAttribute("shipments", stockDocumentRepository.findAllShipments());
+        model.addAttribute("shipments", stockDocumentRepository.findAllShipments(
+                dateFrom, dateTo, warehouseId, partnerName, status, docNumber
+        ));
+        model.addAttribute("warehouses", warehouseRepository.findAllActive());
+
+        model.addAttribute("dateFrom", dateFrom);
+        model.addAttribute("dateTo", dateTo);
+        model.addAttribute("warehouseId", warehouseId);
+        model.addAttribute("partnerName", partnerName);
+        model.addAttribute("status", status);
+        model.addAttribute("docNumber", docNumber);
+
         return "shipments";
     }
 

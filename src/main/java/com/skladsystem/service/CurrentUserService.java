@@ -34,23 +34,24 @@ public class CurrentUserService {
             }
         }
 
-        AppUser fallback = appUserRepository.findFirstActive();
-        if (fallback != null) {
-            session.setAttribute(SESSION_USER_ID, fallback.getId());
-        }
-        return fallback;
+        return null;
+    }
+
+    public boolean isAuthenticated(HttpSession session) {
+        return getCurrentUser(session) != null;
+    }
+
+    public void setCurrentUser(HttpSession session, Long userId) {
+        session.setAttribute(SESSION_USER_ID, userId);
+    }
+
+    public void clearCurrentUser(HttpSession session) {
+        session.removeAttribute(SESSION_USER_ID);
     }
 
     public Long getCurrentUserId(HttpSession session) {
         AppUser user = getCurrentUser(session);
         return user != null ? user.getId() : null;
-    }
-
-    public void switchUser(HttpSession session, Long userId) {
-        AppUser user = appUserRepository.findById(userId);
-        if (user != null && Boolean.TRUE.equals(user.getActive())) {
-            session.setAttribute(SESSION_USER_ID, user.getId());
-        }
     }
 
     public boolean isAdmin(HttpSession session) {
@@ -67,7 +68,7 @@ public class CurrentUserService {
     }
 
     public boolean canManageProducts(HttpSession session) {
-        return hasRole(session, "ADMIN");
+        return isAdmin(session);
     }
 
     public boolean canAccessReceipts(HttpSession session) {
@@ -79,7 +80,7 @@ public class CurrentUserService {
     }
 
     public boolean canAccessInventory(HttpSession session) {
-        return hasRole(session, "ADMIN");
+        return isAdmin(session);
     }
 
     private boolean hasRole(HttpSession session, String roleName) {
