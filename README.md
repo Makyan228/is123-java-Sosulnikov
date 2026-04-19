@@ -97,6 +97,7 @@
 │   │           ├── shipment-form.html
 │   │           ├── shipment-items.html
 │   │           └── shipments.html
+```text
 
 ## Как запустить проект
 Требования
