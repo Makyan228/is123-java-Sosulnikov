@@ -1,11 +1,9 @@
 package com.skladsystem.controller;
 
-import com.skladsystem.repository.AppUserRepository;
 import com.skladsystem.service.AuthService;
 import com.skladsystem.service.CurrentUserService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -14,38 +12,36 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @Controller
 public class LoginController {
 
-    private final AppUserRepository appUserRepository;
     private final AuthService authService;
     private final CurrentUserService currentUserService;
 
-    public LoginController(AppUserRepository appUserRepository,
-                           AuthService authService,
+    public LoginController(AuthService authService,
                            CurrentUserService currentUserService) {
-        this.appUserRepository = appUserRepository;
         this.authService = authService;
         this.currentUserService = currentUserService;
     }
 
     @GetMapping("/login")
-    public String loginPage(Model model, HttpSession session) {
+    public String loginPage(HttpSession session) {
         if (currentUserService.isAuthenticated(session)) {
             return "redirect:/";
         }
 
-        model.addAttribute("users", appUserRepository.findAllActive());
         return "login";
     }
 
     @PostMapping("/login")
-    public String login(@RequestParam Long userId,
+    public String login(@RequestParam String roleName,
+                        @RequestParam String username,
                         @RequestParam String password,
                         HttpSession session,
                         RedirectAttributes redirectAttributes) {
-        boolean success = authService.login(session, userId, password);
+        boolean success = authService.login(session, roleName, username, password);
 
         if (!success) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Неверный пароль.");
-            redirectAttributes.addFlashAttribute("selectedUserId", userId);
+            redirectAttributes.addFlashAttribute("errorMessage", "Неверный тип пользователя, логин или пароль.");
+            redirectAttributes.addFlashAttribute("roleName", roleName);
+            redirectAttributes.addFlashAttribute("username", username);
             return "redirect:/login";
         }
 

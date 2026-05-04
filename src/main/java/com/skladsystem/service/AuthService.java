@@ -17,12 +17,25 @@ public class AuthService {
         this.currentUserService = currentUserService;
     }
 
-    public boolean login(HttpSession session, Long userId, String password) {
-        if (userId == null || password == null || password.isBlank()) {
+    public boolean login(HttpSession session, String roleName, String username, String password) {
+        if (roleName == null || roleName.isBlank()) {
             return false;
         }
 
-        AppUser user = appUserRepository.findByIdAndPassword(userId, password.trim());
+        if (username == null || username.isBlank()) {
+            return false;
+        }
+
+        if (password == null || password.isBlank()) {
+            return false;
+        }
+
+        AppUser user = appUserRepository.findByRoleUsernameAndPassword(
+                roleName.trim(),
+                username.trim(),
+                password.trim()
+        );
+
         if (user == null) {
             return false;
         }

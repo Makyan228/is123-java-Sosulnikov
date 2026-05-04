@@ -4,6 +4,8 @@ import com.skladsystem.model.AppUser;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 
 @Repository
@@ -21,7 +23,7 @@ public class AppUserRepository {
                     u.id,
                     u.username,
                     u.full_name,
-                    u.password,
+                    u.password_hash as password,
                     r.name as role_name,
                     u.is_active
                 from app_user u
@@ -39,7 +41,7 @@ public class AppUserRepository {
                     u.id,
                     u.username,
                     u.full_name,
-                    u.password,
+                    u.password_hash as password,
                     r.name as role_name,
                     u.is_active
                 from app_user u
@@ -51,27 +53,35 @@ public class AppUserRepository {
         return users.isEmpty() ? null : users.get(0);
     }
 
-    public AppUser findByIdAndPassword(Long id, String password) {
+    public AppUser findByRoleUsernameAndPassword(String roleName, String username, String password) {
         String sql = """
                 select
                     u.id,
                     u.username,
                     u.full_name,
-                    u.password,
+                    u.password_hash as password,
                     r.name as role_name,
                     u.is_active
                 from app_user u
                 join app_role r on r.id = u.role_id
-                where u.id = ?
-                  and u.password = ?
+                where upper(r.name) = upper(?)
+                  and lower(u.username) = lower(?)
+                  and u.password_hash = ?
                   and coalesce(u.is_active, 0) = 1
                 """;
 
-        List<AppUser> users = jdbcTemplate.query(sql, (rs, rowNum) -> mapUser(rs), id, password);
+        List<AppUser> users = jdbcTemplate.query(
+                sql,
+                (rs, rowNum) -> mapUser(rs),
+                roleName,
+                username,
+                password
+        );
+
         return users.isEmpty() ? null : users.get(0);
     }
 
-    private AppUser mapUser(java.sql.ResultSet rs) throws java.sql.SQLException {
+    private AppUser mapUser(ResultSet rs) throws SQLException {
         AppUser user = new AppUser();
         user.setId(rs.getLong("id"));
         user.setUsername(rs.getString("username"));

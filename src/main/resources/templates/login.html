@@ -19,13 +19,13 @@
 
         <div class="login-card-header">
             <h1>Авторизация</h1>
-            <p>Выбери пользователя и введи пароль</p>
+            <p>Выберите тип пользователя и введите логин с паролем</p>
         </div>
 
         <div class="login-card-alert login-card-alert-error"
              th:if="${errorMessage}"
              th:text="${errorMessage}">
-            Неверный пароль
+            Ошибка входа
         </div>
 
         <div class="login-card-alert login-card-alert-success"
@@ -36,18 +36,43 @@
 
         <form th:action="@{/login}" method="post" class="login-card-form">
             <div class="login-card-field">
-                <label for="userId">Пользователь</label>
-                <select id="userId" name="userId" required>
-                    <option value="" disabled th:selected="${selectedUserId == null}">
-                        Выберите пользователя
+                <label for="roleName">Тип пользователя</label>
+                <select id="roleName" name="roleName" required>
+                    <option value="" disabled th:selected="${roleName == null}">
+                        Выберите тип пользователя
                     </option>
-                    <option th:each="user : ${users}"
-                            th:value="${user.id}"
-                            th:selected="${selectedUserId != null and selectedUserId == user.id}"
-                            th:text="${user.displayName}">
-                        Пользователь
+
+                    <option value="ADMIN"
+                            th:selected="${roleName == 'ADMIN'}">
+                        Администратор
+                    </option>
+
+                    <option value="RECEIPT_OPERATOR"
+                            th:selected="${roleName == 'RECEIPT_OPERATOR'}">
+                        Оператор поступлений
+                    </option>
+
+                    <option value="SHIPMENT_OPERATOR"
+                            th:selected="${roleName == 'SHIPMENT_OPERATOR'}">
+                        Оператор отгрузок
+                    </option>
+
+                    <option value="LOADER"
+                            th:selected="${roleName == 'LOADER'}">
+                        Грузчик
                     </option>
                 </select>
+            </div>
+
+            <div class="login-card-field">
+                <label for="username">Логин</label>
+                <input id="username"
+                       type="text"
+                       name="username"
+                       th:value="${username}"
+                       placeholder="Например: loader01"
+                       autocomplete="username"
+                       required>
             </div>
 
             <div class="login-card-field">
@@ -56,6 +81,7 @@
                        type="password"
                        name="password"
                        placeholder="Введите пароль"
+                       autocomplete="current-password"
                        required>
             </div>
 
